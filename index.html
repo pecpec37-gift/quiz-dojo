@@ -1,0 +1,1079 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>早押しクイズ道場 🎯</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;700;900&family=Zen+Antique+Soft&family=Kaisei+Decol:wght@400;700&display=swap" rel="stylesheet">
+  <style>
+    /* ==================== VARIABLES ==================== */
+    :root {
+      --bg: #0d0d0f;
+      --surface: #16161a;
+      --surface2: #1e1e24;
+      --border: #2a2a35;
+      --text: #e8e8f0;
+      --text2: #9090a8;
+      --accent: #f5a623;
+      --accent2: #ff6b35;
+      --green: #00d084;
+      --red: #ff4757;
+      --blue: #4ecdc4;
+      --purple: #a29bfe;
+      --gold: #ffd700;
+      --radius: 12px;
+      --glow: 0 0 20px rgba(245,166,35,0.3);
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'Noto Sans JP', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      overflow-x: hidden;
+    }
+
+    /* ==================== SCREENS ==================== */
+    .screen {
+      display: none;
+      min-height: 100vh;
+      animation: fadeIn 0.3s ease;
+    }
+    .screen.active { display: flex; flex-direction: column; }
+
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+    @keyframes slideIn { from { opacity: 0; transform: translateX(-20px); } to { opacity: 1; transform: translateX(0); } }
+    @keyframes pulse { 0%,100% { transform: scale(1); } 50% { transform: scale(1.05); } }
+    @keyframes shake { 0%,100%{transform:translateX(0)} 20%{transform:translateX(-8px)} 40%{transform:translateX(8px)} 60%{transform:translateX(-5px)} 80%{transform:translateX(5px)} }
+    @keyframes glow { 0%,100%{box-shadow:var(--glow)} 50%{box-shadow:0 0 40px rgba(245,166,35,0.6)} }
+    @keyframes timerPulse { 0%,100%{opacity:1} 50%{opacity:0.5} }
+    @keyframes countIn { from{transform:scale(0.5);opacity:0} 50%{transform:scale(1.2)} to{transform:scale(1);opacity:1} }
+    @keyframes float { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-8px)} }
+    @keyframes scanline {
+      0% { top: -100%; }
+      100% { top: 200%; }
+    }
+
+    /* ==================== TOP SCREEN ==================== */
+    #screen-top {
+      background:
+        radial-gradient(ellipse at 20% 50%, rgba(245,166,35,0.08) 0%, transparent 50%),
+        radial-gradient(ellipse at 80% 20%, rgba(255,107,53,0.06) 0%, transparent 50%),
+        var(--bg);
+    }
+
+    .top-header {
+      text-align: center;
+      padding: 48px 20px 32px;
+      position: relative;
+    }
+
+    .top-header::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: url("data:image/svg+xml,%3Csvg width='40' height='40' viewBox='0 0 40 40' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='%23ffffff' fill-opacity='0.02'%3E%3Cpath d='M0 0h20v20H0V0zm20 20h20v20H20V20z'/%3E%3C/g%3E%3C/svg%3E");
+      pointer-events: none;
+    }
+
+    .dojo-emblem {
+      font-size: 64px;
+      margin-bottom: 8px;
+      animation: float 3s ease-in-out infinite;
+      display: inline-block;
+    }
+
+    .top-title {
+      font-family: 'Zen Antique Soft', serif;
+      font-size: clamp(28px, 6vw, 52px);
+      font-weight: 400;
+      background: linear-gradient(135deg, #f5a623, #ff6b35, #ffd700);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      margin-bottom: 8px;
+      letter-spacing: 0.1em;
+      text-shadow: none;
+    }
+
+    .top-subtitle {
+      color: var(--text2);
+      font-size: 14px;
+      letter-spacing: 0.2em;
+      margin-bottom: 4px;
+    }
+
+    .question-count {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      background: rgba(245,166,35,0.1);
+      border: 1px solid rgba(245,166,35,0.3);
+      border-radius: 100px;
+      padding: 4px 14px;
+      font-size: 12px;
+      color: var(--accent);
+      margin-top: 8px;
+    }
+
+    .top-rules {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      margin: 0 20px 28px;
+      padding: 16px 20px;
+    }
+
+    .top-rules h3 {
+      font-size: 12px;
+      color: var(--text2);
+      letter-spacing: 0.15em;
+      margin-bottom: 12px;
+      text-transform: uppercase;
+    }
+
+    .rules-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+    }
+
+    .rule-item {
+      display: flex;
+      align-items: flex-start;
+      gap: 8px;
+      font-size: 13px;
+      color: var(--text2);
+      line-height: 1.5;
+    }
+
+    .rule-icon { font-size: 16px; flex-shrink: 0; margin-top: 1px; }
+
+    .genre-section {
+      padding: 0 20px 32px;
+    }
+
+    .genre-section h2 {
+      font-size: 13px;
+      letter-spacing: 0.2em;
+      color: var(--text2);
+      margin-bottom: 14px;
+      text-transform: uppercase;
+    }
+
+    .genre-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 10px;
+    }
+
+    @media (min-width: 480px) { .genre-grid { grid-template-columns: repeat(3, 1fr); } }
+    @media (min-width: 700px) { .genre-grid { grid-template-columns: repeat(4, 1fr); } }
+
+    .genre-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 16px 12px;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      text-align: center;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .genre-card::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      opacity: 0;
+      transition: opacity 0.2s;
+      background: linear-gradient(135deg, rgba(255,255,255,0.05), transparent);
+    }
+
+    .genre-card:hover::before { opacity: 1; }
+    .genre-card:hover {
+      transform: translateY(-3px);
+      border-color: rgba(255,255,255,0.2);
+      box-shadow: 0 8px 32px rgba(0,0,0,0.4);
+    }
+
+    .genre-card:active { transform: scale(0.97); }
+
+    .genre-card.random {
+      grid-column: span 2;
+      background: linear-gradient(135deg, rgba(245,166,35,0.15), rgba(255,107,53,0.1));
+      border-color: rgba(245,166,35,0.4);
+      animation: glow 3s ease-in-out infinite;
+    }
+
+    @media (min-width: 480px) { .genre-card.random { grid-column: span 3; } }
+    @media (min-width: 700px) { .genre-card.random { grid-column: span 4; } }
+
+    .genre-icon { font-size: 28px; margin-bottom: 6px; }
+    .genre-label { font-size: 13px; font-weight: 700; color: var(--text); }
+    .genre-count { font-size: 11px; color: var(--text2); margin-top: 3px; }
+
+    /* ==================== CONFIRM SCREEN ==================== */
+    #screen-confirm {
+      justify-content: center;
+      align-items: center;
+      padding: 20px;
+      background: var(--bg);
+    }
+
+    .confirm-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      padding: 36px 28px;
+      max-width: 400px;
+      width: 100%;
+      text-align: center;
+    }
+
+    .confirm-genre-icon { font-size: 64px; margin-bottom: 16px; }
+    .confirm-genre-name {
+      font-family: 'Kaisei Decol', serif;
+      font-size: 28px;
+      font-weight: 700;
+      color: var(--accent);
+      margin-bottom: 8px;
+    }
+    .confirm-detail { color: var(--text2); font-size: 14px; margin-bottom: 28px; }
+
+    .confirm-rules {
+      background: var(--surface2);
+      border-radius: var(--radius);
+      padding: 16px;
+      margin-bottom: 28px;
+      text-align: left;
+    }
+
+    .confirm-rule { display: flex; align-items: center; gap: 10px; padding: 6px 0; font-size: 14px; }
+    .confirm-rule:not(:last-child) { border-bottom: 1px solid var(--border); }
+
+    .btn {
+      display: block;
+      width: 100%;
+      padding: 16px;
+      border: none;
+      border-radius: var(--radius);
+      font-family: 'Noto Sans JP', sans-serif;
+      font-size: 16px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: all 0.2s;
+      letter-spacing: 0.05em;
+    }
+
+    .btn-primary {
+      background: linear-gradient(135deg, var(--accent), var(--accent2));
+      color: #fff;
+      box-shadow: 0 4px 20px rgba(245,166,35,0.4);
+    }
+
+    .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 8px 30px rgba(245,166,35,0.5); }
+    .btn-primary:active { transform: scale(0.98); }
+
+    .btn-secondary {
+      background: transparent;
+      color: var(--text2);
+      border: 1px solid var(--border);
+      margin-top: 10px;
+    }
+
+    .btn-secondary:hover { background: var(--surface2); color: var(--text); }
+
+    .btn-answer {
+      background: linear-gradient(135deg, #e74c3c, #c0392b);
+      color: #fff;
+      font-size: 18px;
+      padding: 18px;
+      box-shadow: 0 4px 24px rgba(231,76,60,0.5);
+      animation: pulse 1s ease-in-out infinite;
+      border-radius: 14px;
+    }
+
+    .btn-answer:active { transform: scale(0.95); animation: none; }
+
+    /* ==================== GAME SCREEN ==================== */
+    #screen-game {
+      background:
+        radial-gradient(ellipse at top, rgba(78,205,196,0.05) 0%, transparent 50%),
+        var(--bg);
+      padding: 0;
+    }
+
+    .game-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 12px 16px;
+      background: var(--surface);
+      border-bottom: 1px solid var(--border);
+      position: sticky;
+      top: 0;
+      z-index: 10;
+    }
+
+    .game-progress { font-size: 13px; color: var(--text2); }
+    .game-progress span { color: var(--text); font-weight: 700; }
+
+    .game-score {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      background: rgba(245,166,35,0.1);
+      border: 1px solid rgba(245,166,35,0.3);
+      border-radius: 100px;
+      padding: 4px 12px;
+      font-weight: 900;
+      font-size: 16px;
+      color: var(--accent);
+    }
+
+    /* Timer */
+    .timer-bar-wrap {
+      padding: 0 16px;
+      margin-top: 8px;
+    }
+
+    .timer-display {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 6px;
+    }
+
+    .timer-label { font-size: 11px; color: var(--text2); letter-spacing: 0.1em; }
+    .timer-value {
+      font-family: 'Kaisei Decol', serif;
+      font-size: 28px;
+      font-weight: 700;
+      color: var(--green);
+      transition: color 0.3s;
+    }
+    .timer-value.warning { color: var(--accent); }
+    .timer-value.danger { color: var(--red); animation: timerPulse 0.5s ease-in-out infinite; }
+
+    .timer-bar {
+      width: 100%;
+      height: 6px;
+      background: var(--surface2);
+      border-radius: 100px;
+      overflow: hidden;
+    }
+
+    .timer-fill {
+      height: 100%;
+      border-radius: 100px;
+      transition: width 1s linear, background 0.3s;
+      background: linear-gradient(90deg, var(--green), #00b894);
+    }
+
+    .timer-fill.warning { background: linear-gradient(90deg, var(--accent), #f39c12); }
+    .timer-fill.danger { background: linear-gradient(90deg, var(--red), #e84393); }
+
+    /* Question area */
+    .question-area {
+      padding: 20px 16px;
+      flex: 1;
+    }
+
+    .question-num {
+      font-size: 11px;
+      color: var(--text2);
+      letter-spacing: 0.15em;
+      text-transform: uppercase;
+      margin-bottom: 10px;
+    }
+
+    .question-text {
+      font-family: 'Kaisei Decol', serif;
+      font-size: clamp(18px, 4vw, 26px);
+      line-height: 1.8;
+      color: var(--text);
+      min-height: 120px;
+      position: relative;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 20px;
+    }
+
+    .cursor-blink {
+      display: inline-block;
+      width: 3px;
+      height: 1.1em;
+      background: var(--accent);
+      vertical-align: text-bottom;
+      animation: timerPulse 0.6s ease-in-out infinite;
+      margin-left: 2px;
+    }
+
+    .answer-section {
+      padding: 0 16px 24px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    /* Speech recognition UI */
+    .speech-box {
+      display: none;
+      background: var(--surface);
+      border: 2px solid var(--blue);
+      border-radius: var(--radius);
+      padding: 16px;
+      animation: slideIn 0.3s ease;
+    }
+
+    .speech-box.active { display: block; }
+
+    .speech-listening {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 10px;
+    }
+
+    .speech-wave {
+      display: flex;
+      align-items: center;
+      gap: 3px;
+      height: 24px;
+    }
+
+    .speech-wave span {
+      display: block;
+      width: 4px;
+      background: var(--blue);
+      border-radius: 2px;
+      animation: waveBar 1s ease-in-out infinite;
+    }
+
+    .speech-wave span:nth-child(1) { animation-delay: 0s; }
+    .speech-wave span:nth-child(2) { animation-delay: 0.1s; }
+    .speech-wave span:nth-child(3) { animation-delay: 0.2s; }
+    .speech-wave span:nth-child(4) { animation-delay: 0.3s; }
+    .speech-wave span:nth-child(5) { animation-delay: 0.4s; }
+
+    @keyframes waveBar {
+      0%,100% { height: 6px; }
+      50% { height: 22px; }
+    }
+
+    .speech-label { font-size: 13px; color: var(--blue); font-weight: 700; }
+
+    .speech-result {
+      font-size: 20px;
+      font-weight: 700;
+      color: var(--text);
+      min-height: 36px;
+      letter-spacing: 0.05em;
+    }
+
+    .speech-confirm {
+      display: none;
+      gap: 10px;
+      margin-top: 12px;
+    }
+
+    .speech-confirm.active { display: flex; }
+
+    .btn-ok {
+      flex: 1;
+      padding: 12px;
+      background: var(--green);
+      color: #fff;
+      border: none;
+      border-radius: 8px;
+      font-size: 16px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .btn-ok:hover { background: #00b894; }
+
+    .btn-ng {
+      flex: 1;
+      padding: 12px;
+      background: var(--red);
+      color: #fff;
+      border: none;
+      border-radius: 8px;
+      font-size: 16px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .btn-ng:hover { background: #c0392b; }
+
+    /* Result overlay */
+    .result-overlay {
+      display: none;
+      position: fixed;
+      inset: 0;
+      z-index: 100;
+      justify-content: center;
+      align-items: center;
+      flex-direction: column;
+      gap: 16px;
+      padding: 20px;
+    }
+
+    .result-overlay.show { display: flex; }
+
+    .result-overlay::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: rgba(0,0,0,0.85);
+      backdrop-filter: blur(4px);
+    }
+
+    .result-box {
+      position: relative;
+      z-index: 1;
+      background: var(--surface);
+      border-radius: 20px;
+      padding: 32px 28px;
+      max-width: 400px;
+      width: 100%;
+      text-align: center;
+      animation: countIn 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+      border: 2px solid var(--border);
+    }
+
+    .result-box.correct { border-color: var(--green); box-shadow: 0 0 40px rgba(0,208,132,0.3); }
+    .result-box.incorrect { border-color: var(--red); box-shadow: 0 0 40px rgba(255,71,87,0.3); }
+
+    .result-emoji { font-size: 56px; margin-bottom: 10px; }
+    .result-label { font-size: 28px; font-weight: 900; margin-bottom: 12px; }
+    .result-box.correct .result-label { color: var(--green); }
+    .result-box.incorrect .result-label { color: var(--red); }
+
+    .result-answer-show {
+      background: var(--surface2);
+      border-radius: 10px;
+      padding: 14px;
+      margin: 12px 0;
+    }
+
+    .result-answer-label { font-size: 11px; color: var(--text2); letter-spacing: 0.15em; margin-bottom: 6px; }
+    .result-answer-q { font-size: 13px; color: var(--text2); margin-bottom: 6px; line-height: 1.6; }
+    .result-answer-a { font-size: 20px; font-weight: 900; color: var(--accent); }
+
+    .result-feedback {
+      font-size: 14px;
+      color: var(--text2);
+      margin-bottom: 20px;
+    }
+
+    .result-feedback .highlight { font-weight: 700; }
+    .result-feedback .highlight.plus { color: var(--green); }
+    .result-feedback .highlight.minus { color: var(--red); }
+
+    /* ==================== FINAL SCREEN ==================== */
+    #screen-final {
+      background:
+        radial-gradient(ellipse at 50% 0%, rgba(255,215,0,0.12) 0%, transparent 60%),
+        var(--bg);
+      padding: 0 0 40px;
+      align-items: center;
+    }
+
+    .final-header {
+      width: 100%;
+      padding: 40px 20px 24px;
+      text-align: center;
+    }
+
+    .final-trophy { font-size: 72px; margin-bottom: 12px; animation: float 3s ease-in-out infinite; display: inline-block; }
+    .final-title {
+      font-family: 'Zen Antique Soft', serif;
+      font-size: 32px;
+      background: linear-gradient(135deg, var(--gold), var(--accent));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      margin-bottom: 6px;
+    }
+
+    .final-score-card {
+      background: var(--surface);
+      border: 2px solid rgba(255,215,0,0.4);
+      border-radius: 20px;
+      padding: 28px;
+      width: calc(100% - 40px);
+      max-width: 440px;
+      text-align: center;
+      box-shadow: 0 0 40px rgba(255,215,0,0.15);
+    }
+
+    .final-score-num {
+      font-family: 'Kaisei Decol', serif;
+      font-size: 72px;
+      font-weight: 700;
+      color: var(--gold);
+      line-height: 1;
+      margin-bottom: 4px;
+    }
+
+    .final-score-label { font-size: 14px; color: var(--text2); margin-bottom: 24px; }
+
+    .final-stats {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 10px;
+      margin-bottom: 24px;
+    }
+
+    .stat-box {
+      background: var(--surface2);
+      border-radius: 10px;
+      padding: 12px 8px;
+    }
+
+    .stat-val { font-size: 22px; font-weight: 900; }
+    .stat-lbl { font-size: 11px; color: var(--text2); margin-top: 2px; }
+    .stat-val.green { color: var(--green); }
+    .stat-val.red { color: var(--red); }
+    .stat-val.blue { color: var(--blue); }
+
+    /* Wrong list */
+    .wrong-list-section {
+      width: calc(100% - 40px);
+      max-width: 440px;
+      margin-top: 20px;
+    }
+
+    .wrong-list-title {
+      font-size: 13px;
+      color: var(--text2);
+      letter-spacing: 0.15em;
+      margin-bottom: 12px;
+      text-transform: uppercase;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .wrong-item {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-left: 4px solid var(--red);
+      border-radius: 10px;
+      padding: 14px 16px;
+      margin-bottom: 10px;
+      animation: slideIn 0.3s ease;
+    }
+
+    .wrong-item-q { font-size: 14px; color: var(--text2); margin-bottom: 6px; line-height: 1.6; }
+    .wrong-item-a { font-size: 16px; font-weight: 700; color: var(--accent); }
+
+    /* ==================== RANKING SCREEN ==================== */
+    #screen-ranking {
+      background: var(--bg);
+      padding-bottom: 40px;
+    }
+
+    .ranking-header {
+      padding: 40px 20px 20px;
+      text-align: center;
+      background: linear-gradient(180deg, rgba(245,166,35,0.08), transparent);
+    }
+
+    .ranking-title {
+      font-family: 'Zen Antique Soft', serif;
+      font-size: 28px;
+      color: var(--accent);
+      margin-bottom: 4px;
+    }
+
+    .ranking-list {
+      padding: 0 20px;
+    }
+
+    .ranking-item {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 14px 16px;
+      margin-bottom: 8px;
+      animation: slideIn 0.3s ease;
+    }
+
+    .ranking-item:nth-child(1) { border-color: rgba(255,215,0,0.5); background: rgba(255,215,0,0.05); }
+    .ranking-item:nth-child(2) { border-color: rgba(192,192,192,0.5); }
+    .ranking-item:nth-child(3) { border-color: rgba(205,127,50,0.5); }
+
+    .rank-num {
+      font-family: 'Kaisei Decol', serif;
+      font-size: 22px;
+      font-weight: 700;
+      width: 36px;
+      text-align: center;
+      flex-shrink: 0;
+    }
+
+    .rank-num.gold { color: var(--gold); }
+    .rank-num.silver { color: #c0c0c0; }
+    .rank-num.bronze { color: #cd7f32; }
+
+    .rank-info { flex: 1; min-width: 0; }
+    .rank-genre { font-size: 12px; color: var(--text2); margin-bottom: 2px; }
+    .rank-date { font-size: 11px; color: var(--text2); }
+    .rank-score { font-family: 'Kaisei Decol', serif; font-size: 24px; font-weight: 700; color: var(--accent); }
+    .rank-correct { font-size: 12px; color: var(--text2); text-align: right; }
+
+    /* ==================== FEEDBACK TOAST ==================== */
+    .feedback-toast {
+      position: fixed;
+      top: 80px;
+      left: 50%;
+      transform: translateX(-50%) translateY(-20px);
+      background: var(--surface);
+      border: 2px solid var(--border);
+      border-radius: 100px;
+      padding: 10px 24px;
+      font-size: 16px;
+      font-weight: 700;
+      z-index: 200;
+      opacity: 0;
+      transition: all 0.3s ease;
+      pointer-events: none;
+      white-space: nowrap;
+    }
+
+    .feedback-toast.show {
+      opacity: 1;
+      transform: translateX(-50%) translateY(0);
+    }
+
+    .feedback-toast.positive { border-color: var(--green); color: var(--green); }
+    .feedback-toast.negative { border-color: var(--red); color: var(--red); }
+
+    /* ==================== BOTTOM NAV ==================== */
+    .bottom-nav {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      display: flex;
+      background: var(--surface);
+      border-top: 1px solid var(--border);
+      z-index: 50;
+    }
+
+    .nav-btn {
+      flex: 1;
+      padding: 12px 8px;
+      background: none;
+      border: none;
+      color: var(--text2);
+      font-size: 11px;
+      font-family: 'Noto Sans JP', sans-serif;
+      cursor: pointer;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 4px;
+      transition: color 0.2s;
+    }
+
+    .nav-btn .nav-icon { font-size: 22px; }
+    .nav-btn.active, .nav-btn:hover { color: var(--accent); }
+
+    .app-content { padding-bottom: 60px; }
+
+    /* ==================== MISC ==================== */
+    .empty-state {
+      text-align: center;
+      padding: 48px 20px;
+      color: var(--text2);
+    }
+
+    .empty-state .emoji { font-size: 48px; margin-bottom: 12px; }
+    .empty-state p { font-size: 14px; }
+
+    .speech-no-support {
+      background: rgba(255,71,87,0.1);
+      border: 1px solid rgba(255,71,87,0.3);
+      border-radius: var(--radius);
+      padding: 12px 16px;
+      font-size: 13px;
+      color: var(--red);
+      display: none;
+      margin-bottom: 12px;
+    }
+
+    .manual-input-area {
+      display: none;
+    }
+
+    .manual-input {
+      width: 100%;
+      background: var(--surface2);
+      border: 2px solid var(--border);
+      border-radius: var(--radius);
+      padding: 14px 16px;
+      font-size: 18px;
+      color: var(--text);
+      font-family: 'Noto Sans JP', sans-serif;
+      outline: none;
+      transition: border-color 0.2s;
+    }
+
+    .manual-input:focus { border-color: var(--blue); }
+    .manual-input::placeholder { color: var(--text2); }
+
+    .hint-text {
+      font-size: 12px;
+      color: var(--text2);
+      text-align: center;
+      margin-top: 6px;
+    }
+
+    /* Scanline effect */
+    .scanline-container {
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      overflow: hidden;
+      z-index: 999;
+      opacity: 0.03;
+    }
+
+    .scanline-container::before {
+      content: '';
+      position: absolute;
+      left: 0;
+      right: 0;
+      height: 200px;
+      background: linear-gradient(transparent, rgba(255,255,255,0.8), transparent);
+      animation: scanline 8s linear infinite;
+    }
+
+    .divider { height: 1px; background: var(--border); margin: 0 20px; }
+
+    .page-section-title {
+      padding: 20px 20px 12px;
+      font-size: 11px;
+      letter-spacing: 0.2em;
+      color: var(--text2);
+      text-transform: uppercase;
+    }
+  </style>
+</head>
+<body>
+
+<div class="scanline-container"></div>
+
+<!-- ==================== TOP SCREEN ==================== -->
+<div id="screen-top" class="screen active">
+  <div class="app-content">
+    <div class="top-header">
+      <div class="dojo-emblem">🎯</div>
+      <h1 class="top-title">早押しクイズ道場</h1>
+      <p class="top-subtitle">HAYAOSHI QUIZ DOJO</p>
+      <div class="question-count">📚 <span id="total-q-count">0</span>問収録</div>
+    </div>
+
+    <div class="top-rules">
+      <h3>⚡ ゲームルール</h3>
+      <div class="rules-grid">
+        <div class="rule-item"><span class="rule-icon">⏱</span><span>制限時間120秒＋残り時間ボーナス</span></div>
+        <div class="rule-item"><span class="rule-icon">✅</span><span>正解：+10点＋時間+5秒</span></div>
+        <div class="rule-item"><span class="rule-icon">❌</span><span>不正解：減点なし・時間-5秒</span></div>
+        <div class="rule-item"><span class="rule-icon">🎙</span><span>声で回答・途中押しOK</span></div>
+        <div class="rule-item"><span class="rule-icon">🃏</span><span>各ジャンル30問ランダム出題</span></div>
+        <div class="rule-item"><span class="rule-icon">🏆</span><span>ローカルランキング記録</span></div>
+      </div>
+    </div>
+
+    <div class="genre-section">
+      <h2>🎲 ジャンル選択 — クリックで即スタート！</h2>
+      <div class="genre-grid" id="genre-grid"></div>
+    </div>
+  </div>
+</div>
+
+<!-- ==================== CONFIRM SCREEN ==================== -->
+<div id="screen-confirm" class="screen">
+  <div class="confirm-card">
+    <div class="confirm-genre-icon" id="conf-icon">🎲</div>
+    <div class="confirm-genre-name" id="conf-name">ランダム出題</div>
+    <div class="confirm-detail" id="conf-detail">全ジャンルからランダムに30問出題します</div>
+
+    <div class="confirm-rules">
+      <div class="confirm-rule">⏱ <span>制限時間 <b>120秒</b></span></div>
+      <div class="confirm-rule">🃏 <span>出題数 <b>30問</b>（ランダム）</span></div>
+      <div class="confirm-rule">🎙 <span>音声認識で回答</span></div>
+      <div class="confirm-rule">🏆 <span>残り時間がボーナス点に加算</span></div>
+    </div>
+
+    <button class="btn btn-primary" id="btn-start-game">
+      🚀 ゲームスタート！
+    </button>
+    <button class="btn btn-secondary" id="btn-back-top">
+      ← ジャンル選択に戻る
+    </button>
+  </div>
+</div>
+
+<!-- ==================== GAME SCREEN ==================== -->
+<div id="screen-game" class="screen">
+  <div class="app-content">
+    <div class="game-header">
+      <div class="game-progress">第 <span id="q-num">1</span> 問 / <span id="q-total">30</span></div>
+      <div class="game-score">⭐ <span id="score-disp">0</span></div>
+    </div>
+
+    <div class="timer-bar-wrap">
+      <div class="timer-display">
+        <span class="timer-label">⏱ 残り時間</span>
+        <span class="timer-value" id="timer-value">120</span>
+      </div>
+      <div class="timer-bar">
+        <div class="timer-fill" id="timer-fill" style="width:100%"></div>
+      </div>
+    </div>
+
+    <div class="question-area">
+      <div class="question-num" id="q-genre-label">理科・科学</div>
+      <div class="question-text" id="question-text">
+        <span class="cursor-blink"></span>
+      </div>
+    </div>
+
+    <div class="answer-section">
+      <div class="speech-no-support" id="speech-no-support">
+        ⚠️ このブラウザは音声認識に対応していません。テキスト入力でお答えください。
+      </div>
+
+      <!-- 音声認識UI -->
+      <div class="speech-box" id="speech-box">
+        <div class="speech-listening">
+          <div class="speech-wave">
+            <span></span><span></span><span></span><span></span><span></span>
+          </div>
+          <span class="speech-label" id="speech-label">🎙 聞いています...</span>
+        </div>
+        <div class="speech-result" id="speech-result">　</div>
+        <div class="speech-confirm" id="speech-confirm">
+          <button class="btn-ng" id="btn-speech-ng">❌ 再回答</button>
+          <button class="btn-ok" id="btn-speech-ok">✅ これで確定</button>
+        </div>
+      </div>
+
+      <!-- テキスト入力（フォールバック） -->
+      <div class="manual-input-area" id="manual-input-area">
+        <input type="text" class="manual-input" id="manual-input" placeholder="ここに回答を入力してEnter">
+        <div class="hint-text">Enterキーまたは「確定」ボタンで回答</div>
+        <button class="btn btn-primary" id="btn-manual-submit" style="margin-top:8px">確定</button>
+      </div>
+
+      <button class="btn btn-answer" id="btn-answer">
+        🎙 回答する！
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- ==================== RESULT OVERLAY ==================== -->
+<div class="result-overlay" id="result-overlay">
+  <div class="result-box" id="result-box">
+    <div class="result-emoji" id="result-emoji">✅</div>
+    <div class="result-label" id="result-label">正解！</div>
+    <div class="result-answer-show">
+      <div class="result-answer-label">▼ 問題と正解</div>
+      <div class="result-answer-q" id="result-q-text"></div>
+      <div class="result-answer-a" id="result-a-text"></div>
+    </div>
+    <div class="result-feedback" id="result-feedback"></div>
+    <button class="btn btn-primary" id="btn-next">次の問題へ →</button>
+  </div>
+</div>
+
+<!-- ==================== FINAL SCREEN ==================== -->
+<div id="screen-final" class="screen">
+  <div class="app-content" style="width:100%; display:flex; flex-direction:column; align-items:center;">
+    <div class="final-header">
+      <div class="final-trophy" id="final-trophy">🏆</div>
+      <div class="final-title">ゲーム終了！</div>
+    </div>
+
+    <div class="final-score-card">
+      <div class="final-score-num" id="final-score">0</div>
+      <div class="final-score-label">最終スコア（ランキングに保存されました）</div>
+      <div class="final-stats">
+        <div class="stat-box">
+          <div class="stat-val green" id="final-correct">0</div>
+          <div class="stat-lbl">✅ 正解</div>
+        </div>
+        <div class="stat-box">
+          <div class="stat-val red" id="final-wrong">0</div>
+          <div class="stat-lbl">❌ 不正解</div>
+        </div>
+        <div class="stat-box">
+          <div class="stat-val blue" id="final-bonus">0</div>
+          <div class="stat-lbl">⏱ 時間ボーナス</div>
+        </div>
+      </div>
+      <button class="btn btn-primary" id="btn-retry">🔄 もう一度このジャンル</button>
+      <button class="btn btn-secondary" style="margin-top:10px" id="btn-go-top">🏠 ジャンル選択に戻る</button>
+    </div>
+
+    <div class="wrong-list-section" id="wrong-list-section">
+      <div class="wrong-list-title">📖 間違えた問題の復習</div>
+      <div id="wrong-list"></div>
+    </div>
+  </div>
+</div>
+
+<!-- ==================== RANKING SCREEN ==================== -->
+<div id="screen-ranking" class="screen">
+  <div class="app-content">
+    <div class="ranking-header">
+      <div style="font-size:48px">🏆</div>
+      <div class="ranking-title">スコアランキング</div>
+      <div style="color:var(--text2);font-size:13px;margin-top:4px">ローカル保存（上位20件）</div>
+    </div>
+    <div class="ranking-list" id="ranking-list"></div>
+    <div style="padding:0 20px;margin-top:16px">
+      <button class="btn btn-secondary" id="btn-clear-ranking" style="padding:10px">🗑 ランキングをリセット</button>
+    </div>
+  </div>
+</div>
+
+<!-- ==================== BOTTOM NAV ==================== -->
+<div class="bottom-nav">
+  <button class="nav-btn active" id="nav-top" onclick="App.nav('top')">
+    <span class="nav-icon">🏠</span>
+    <span>ホーム</span>
+  </button>
+  <button class="nav-btn" id="nav-ranking" onclick="App.nav('ranking')">
+    <span class="nav-icon">🏆</span>
+    <span>ランキング</span>
+  </button>
+</div>
+
+<!-- Feedback toast -->
+<div class="feedback-toast" id="feedback-toast"></div>
+
+<script src="questions.js"></script>
+<script src="questions-extra.js"></script>
+<script src="app.js"></script>
+</body>
+</html>

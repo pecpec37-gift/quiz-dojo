@@ -239,36 +239,43 @@ const App = (() => {
   }
 
   // ============================
-  // 4択生成
+  // 4択生成（dummy優先 → type同一フォールバック）
   // ============================
   function buildChoices(correctQ) {
     const correctAnswer = correctQ.a;
+    let dummyLabels = [];
 
-    // 同ジャンル（またはランダム）から誤答候補を集める
-    let pool = [];
-    const genreId = state.selectedGenre?.id;
-    if (genreId && genreId !== 'random') {
-      pool = (QUIZ_DATA.questions[genreId] || []).filter(q => q.a !== correctAnswer);
-    }
-    // 不足なら全ジャンルから補充
-    if (pool.length < 3) {
+    // ① dummyが設定されていればそれを使う
+    if (correctQ.dummy && correctQ.dummy.length >= 3) {
+      dummyLabels = correctQ.dummy.slice(0, 3).sort(() => Math.random() - 0.5);
+    } else {
+      // ② typeが一致する他の問題の正解をダミーに使う
+      const qType = correctQ.type || 'thing';
+      let pool = [];
       Object.values(QUIZ_DATA.questions).forEach(arr => {
-        arr.forEach(q => { if (q.a !== correctAnswer) pool.push(q); });
+        arr.forEach(q => {
+          if (q.type === qType && q.a !== correctAnswer && !pool.includes(q.a)) {
+            pool.push(q.a);
+          }
+        });
       });
+      // 不足なら全問題から補充
+      if (pool.length < 3) {
+        Object.values(QUIZ_DATA.questions).forEach(arr => {
+          arr.forEach(q => {
+            if (q.a !== correctAnswer && !pool.includes(q.a)) pool.push(q.a);
+          });
+        });
+      }
+      // シャッフルして3つ選ぶ
+      pool = pool.sort(() => Math.random() - 0.5);
+      dummyLabels = pool.slice(0, 3);
     }
 
-    // シャッフルして3つ選ぶ
-    const shuffled = pool.sort(() => Math.random() - 0.5);
-    // 重複しないように
-    const dummies = [];
-    for (const q of shuffled) {
-      if (!dummies.find(d => d.a === q.a) && dummies.length < 3) dummies.push(q);
-    }
-
-    // 4択に組み立てシャッフル
+    // 4択に組み立ててシャッフル
     const choices = [
       { label: correctAnswer, correct: true },
-      ...dummies.slice(0, 3).map(q => ({ label: q.a, correct: false }))
+      ...dummyLabels.map(label => ({ label, correct: false }))
     ].sort(() => Math.random() - 0.5);
 
     return choices;

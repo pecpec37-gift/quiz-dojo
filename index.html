@@ -1080,7 +1080,7 @@
 <!-- ポータルに戻るボタン（固定） -->
 <style>
 .portal-fixed-btn{
-  position:fixed;bottom:20px;left:20px;z-index:9999;
+  position:fixed;bottom:20px;left:20px;z-index:10000;
   display:inline-flex;align-items:center;gap:8px;
   padding:10px 18px;
   background:rgba(15,23,42,0.92);
@@ -1094,6 +1094,7 @@
   box-shadow:0 4px 16px rgba(0,0,0,0.5);
   transition:all 0.15s;
   white-space:nowrap;
+  pointer-events:auto;
 }
 .portal-fixed-btn:hover{
   background:rgba(15,23,42,0.98);

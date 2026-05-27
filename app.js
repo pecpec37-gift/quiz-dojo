@@ -296,9 +296,13 @@ const App = (() => {
   // ============================
   // SPEECH RECOGNITION
   // ============================
-  function startSpeechRecognition() {
+  function startSpeechRecognition(retryCount = 0) {
+    const MAX_RETRY = 2; // 最大2回リトライ、それ以上はテキスト入力へ
+
     $('speech-box').classList.add('active');
-    $('speech-label').textContent = '🎙 聞いています...';
+    $('speech-label').textContent = retryCount > 0
+      ? `🎙 もう一度話してください（${retryCount}/${MAX_RETRY}）`
+      : '🎙 聞いています...';
     $('speech-result').textContent = '　';
     $('speech-confirm').classList.remove('active');
     state.currentAnswer = '';
@@ -312,6 +316,17 @@ const App = (() => {
     recognition.maxAlternatives = 3;
 
     state.speechRecognition = recognition;
+
+    // テキスト入力へ切り替えるヘルパー
+    const fallbackToText = (msg) => {
+      hideSpeechBox();
+      $('manual-input-area').style.display = 'block';
+      $('manual-input').value = '';
+      $('manual-input').focus();
+      $('speech-no-support').style.display = 'block';
+      $('speech-no-support').textContent = msg;
+      state.useSpeech = false;
+    };
 
     recognition.onresult = (event) => {
       let interim = '';
@@ -338,27 +353,27 @@ const App = (() => {
     };
 
     recognition.onerror = (e) => {
-      if (e.error === 'no-speech' || e.error === 'aborted') return;
-      $('speech-label').textContent = '⚠️ 再度お試しください';
+      if (e.error === 'aborted') return;
       state.speechActive = false;
-      // フォールバック
-      setTimeout(() => {
-        hideSpeechBox();
-        $('manual-input-area').style.display = 'block';
-        $('manual-input').focus();
-        $('speech-no-support').style.display = 'block';
-        $('speech-no-support').textContent = '⚠️ 音声認識エラー。テキスト入力に切り替えます。';
-        state.useSpeech = false;
-      }, 800);
+      if (e.error === 'not-allowed') {
+        setTimeout(() => fallbackToText('⚠️ マイクへのアクセスが拒否されました。テキスト入力に切り替えます。'), 300);
+      } else if (e.error === 'no-speech') {
+        // no-speech は onend で処理するので何もしない
+      } else {
+        setTimeout(() => fallbackToText('⚠️ 音声認識エラー。テキスト入力に切り替えます。'), 800);
+      }
     };
 
     recognition.onend = () => {
-      if (state.speechActive) {
-        // 何も認識できなかった場合
-        $('speech-label').textContent = '⚠️ もう一度話してください';
-        state.speechActive = false;
-        // 再起動
-        setTimeout(() => startSpeechRecognition(), 600);
+      if (!state.speechActive) return; // 正常終了・エラー処理済みはスキップ
+      // 無音で終わった場合
+      state.speechActive = false;
+      if (retryCount < MAX_RETRY) {
+        $('speech-label').textContent = `⚠️ 聞き取れませんでした。もう一度どうぞ`;
+        setTimeout(() => startSpeechRecognition(retryCount + 1), 800);
+      } else {
+        // リトライ上限 → テキスト入力へ
+        setTimeout(() => fallbackToText('⚠️ 音声を認識できませんでした。テキストで入力してください。'), 300);
       }
     };
 
@@ -521,8 +536,10 @@ const App = (() => {
     const wl = $('wrong-list');
     const ws = $('wrong-list-section');
 
-    if (state.wrongList.length === 0) {
+    if (state.wrongList.length === 0 && state.correct > 0) {
       ws.innerHTML = '<div class="empty-state"><div class="emoji">🎉</div><p>全問正解！完璧です！</p></div>';
+    } else if (state.correct === 0 && state.wrong === 0) {
+      ws.innerHTML = '<div class="empty-state"><div class="emoji">⏱</div><p>時間切れです。ジャンルを選んで挑戦してみましょう！</p></div>';
     } else {
       wl.innerHTML = '';
       state.wrongList.forEach((q, i) => {
@@ -541,6 +558,18 @@ const App = (() => {
     saveRanking(total, state.correct, state.selectedGenre);
 
     showScreen('final');
+  }
+
+  // ============================
+  // BACK TO TOP（ゲーム中断）
+  // ============================
+  function backToTop() {
+    if (!confirm('ゲームを中断してTOPに戻りますか？\n（スコアは記録されません）')) return;
+    stopTimer();
+    hideSpeechBox();
+    if (state.typingTimeout) clearTimeout(state.typingTimeout);
+    $('result-overlay').classList.remove('show');
+    showScreen('top');
   }
 
   // ============================
@@ -646,7 +675,7 @@ const App = (() => {
   // ============================
   // PUBLIC
   // ============================
-  return { nav, init };
+  return { nav, init, backToTop };
 })();
 
 // Start

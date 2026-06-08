@@ -419,6 +419,9 @@ const App = (() => {
   // ============================
   function nextQuestion() {
     $('result-overlay').classList.remove('show');
+    // トーストを即消す（次の問題文に重ならないように）
+    clearTimeout(toastTimeout);
+    $('feedback-toast').classList.remove('show');
     state.currentQ++;
     if (state.currentQ >= state.questions.length || state.timeLeft <= 0) endGame();
     else showQuestion();

@@ -207,6 +207,10 @@ const App = (() => {
     state.answerPhase = false;
     state.typingDone = false;
     state.displayedText = '';
+    const questionEl = $('question-text');
+    questionEl.style.visibility = 'visible';
+    questionEl.style.opacity = '1';
+    questionEl.style.transition = 'none';
     $('btn-answer').style.display = 'block';
     $('btn-answer').disabled = false;
     $('btn-answer').textContent = '⚡ 回答する！';
@@ -291,7 +295,13 @@ const App = (() => {
     $('btn-answer').style.display = 'none';
     $('btn-report-q').style.display = 'none';
 
-    // タイプライターは継続（止めない）
+    // タイプライターを止めて問題文を非表示にする
+    if (state.typingTimeout) clearTimeout(state.typingTimeout);
+    const questionEl = $('question-text');
+    questionEl.style.visibility = 'hidden';
+    questionEl.style.opacity = '0';
+    questionEl.style.transition = 'opacity 0.2s ease';
+
     // 選択肢を生成して表示
     const q = state.questions[state.currentQ];
     state.currentChoices = buildChoices(q);
@@ -326,17 +336,18 @@ const App = (() => {
       }
     });
 
-    // タイプライターを即完了させる
-    if (!state.typingDone) {
-      if (state.typingTimeout) clearTimeout(state.typingTimeout);
-      const q = state.questions[state.currentQ];
-      $('question-text').innerHTML = escapeHtml(q.q);
-      state.displayedText = q.q;
-      state.typingDone = true;
-    }
+    // 問題文を全文表示して再表示
+    const q = state.questions[state.currentQ];
+    const questionEl = $('question-text');
+    questionEl.innerHTML = escapeHtml(q.q);
+    questionEl.style.transition = 'opacity 0.3s ease';
+    questionEl.style.visibility = 'visible';
+    questionEl.style.opacity = '1';
+    state.displayedText = q.q;
+    state.typingDone = true;
 
     // 結果表示（少し待ってオーバーレイ）
-    setTimeout(() => showResult(choice.correct, state.questions[state.currentQ], choice.label), 500);
+    setTimeout(() => showResult(choice.correct, state.questions[state.currentQ], choice.label), 600);
   }
 
   // ============================

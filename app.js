@@ -30,7 +30,7 @@ const App = (() => {
   const CORRECT_TIME_BONUS = 5;
   const WRONG_TIME_PENALTY = 5;
   const QUESTIONS_PER_GAME = 30;
-  const TYPING_SPEED = 75;
+  const TYPING_SPEED = 90;
 
   const $ = id => document.getElementById(id);
 

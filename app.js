@@ -16,7 +16,7 @@ const App = (() => {
     correct: 0,
     wrong: 0,
     wrongList: [],
-    timeLeft: 120,
+    timeLeft: 60,
     timerInterval: null,
     displayedText: '',    // タイプライターで表示中のテキスト
     typingTimeout: null,
@@ -25,7 +25,7 @@ const App = (() => {
     answerPhase: false,   // 選択肢表示中フラグ
   };
 
-  const TOTAL_TIME = 120;
+  const TOTAL_TIME = 60;
   const CORRECT_POINTS = 10;
   const CORRECT_TIME_BONUS = 5;
   const WRONG_TIME_PENALTY = 5;

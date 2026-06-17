@@ -29,7 +29,9 @@ const App = (() => {
   const CORRECT_POINTS = 10;
   const CORRECT_TIME_BONUS = 5;
   const WRONG_TIME_PENALTY = 5;
-  const QUESTIONS_PER_GAME = 30;
+  const QUESTIONS_PER_GAME = 20;
+  const STAMP_GAME_ID = 'hayaoshi-quiz-dojo';  /* ポータル花丸スタンプ用ID（GitHubリポジトリ名と一致させる）*/
+  const HANAMARU_MIN = 200;  /* このスコア以上で花丸 */
   const TYPING_SPEED = 90;
 
   const $ = id => document.getElementById(id);
@@ -97,6 +99,7 @@ const App = (() => {
     $('btn-retry').addEventListener('click', retryGame);
     $('btn-go-top').addEventListener('click', () => { stopTimer(); showScreen('top'); });
     $('btn-clear-ranking').addEventListener('click', clearRanking);
+    { const _hb = $('btn-hanamaru'); if (_hb) _hb.addEventListener('click', sendHanamaru); }
   }
 
   // ============================
@@ -471,6 +474,7 @@ const App = (() => {
     }
 
     saveRanking(total, state.correct, state.selectedGenre);
+    handleHanamaru(total, state.selectedGenre);
     showScreen('final');
   }
 
@@ -483,6 +487,45 @@ const App = (() => {
     if (state.typingTimeout) clearTimeout(state.typingTimeout);
     $('result-overlay').classList.remove('show');
     showScreen('top');
+  }
+
+  // ============================
+  // 花丸スタンプ（200点以上でポータル反映）
+  // ============================
+  function handleHanamaru(total, genre) {
+    const banner = $('hanamaru-banner');
+    if (!banner) return;
+    const genreLabel = genre?.label ?? 'ランダム';
+    state._hanamaruGenre = genreLabel;
+    state._hanamaruSent = false;
+    if (total < HANAMARU_MIN) { banner.style.display = 'none'; return; }
+    banner.style.display = 'block';
+    const status = $('hanamaru-status');
+    if (status) status.textContent = '';
+    const btn = $('btn-hanamaru');
+    if (btn) { btn.disabled = false; btn.style.display = ''; }
+    const nameInput = $('hanamaru-name');
+    if (window.TomyStamp) {
+      const saved = TomyStamp.getPlayer();
+      if (nameInput && saved) nameInput.value = saved;
+      if (saved) sendHanamaru();  // 名前が保存済みなら自動送信
+    }
+  }
+
+  function sendHanamaru() {
+    if (!window.TomyStamp || state._hanamaruSent) return;
+    const nameInput = $('hanamaru-name');
+    const status = $('hanamaru-status');
+    const name = (nameInput?.value || '').trim();
+    if (!name) { if (status) status.textContent = '⚠️ 名前を入力してください'; return; }
+    TomyStamp.setPlayer(name);
+    /* stamp.js は第3引数が9以上のとき1個スタンプを送る仕様。
+       このゲームは「200点以上」が条件なので、達成時に9を渡して発火させる。*/
+    TomyStamp.send(STAMP_GAME_ID, state._hanamaruGenre || 'ランダム', 9);
+    state._hanamaruSent = true;
+    const btn = $('btn-hanamaru');
+    if (btn) { btn.disabled = true; }
+    if (status) status.textContent = '🌸 花丸を記録しました！ポータルのランキングに反映されます';
   }
 
   // ============================

@@ -159,20 +159,6 @@
 
     .answer-section { padding: 0 16px 24px; display: flex; flex-direction: column; gap: 12px; }
 
-    .speech-box { display: none; background: var(--surface); border: 2px solid var(--blue); border-radius: var(--radius); padding: 16px; animation: slideIn 0.3s ease; }
-    .speech-box.active { display: block; }
-    .speech-listening { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; }
-    .speech-wave { display: flex; align-items: center; gap: 3px; height: 24px; }
-    .speech-wave span { display: block; width: 4px; background: var(--blue); border-radius: 2px; animation: waveBar 1s ease-in-out infinite; }
-    .speech-wave span:nth-child(1) { animation-delay: 0s; }
-    .speech-wave span:nth-child(2) { animation-delay: 0.1s; }
-    .speech-wave span:nth-child(3) { animation-delay: 0.2s; }
-    .speech-wave span:nth-child(4) { animation-delay: 0.3s; }
-    .speech-wave span:nth-child(5) { animation-delay: 0.4s; }
-    .speech-label { font-size: 13px; color: var(--blue); font-weight: 700; }
-    .speech-result { font-size: 20px; font-weight: 700; color: var(--text); min-height: 36px; letter-spacing: 0.05em; }
-    .speech-confirm { display: none; gap: 10px; margin-top: 12px; }
-    .speech-confirm.active { display: flex; }
     .btn-ok { flex: 1; padding: 12px; background: var(--green); color: #fff; border: none; border-radius: 8px; font-size: 16px; font-weight: 700; cursor: pointer; transition: all 0.2s; }
     .btn-ok:hover { background: #00b894; }
     .btn-ng { flex: 1; padding: 12px; background: var(--red); color: #fff; border: none; border-radius: 8px; font-size: 16px; font-weight: 700; cursor: pointer; transition: all 0.2s; }
@@ -252,7 +238,6 @@
     .empty-state .emoji { font-size: 48px; margin-bottom: 12px; }
     .empty-state p { font-size: 14px; }
 
-    .speech-no-support { background: rgba(255,71,87,0.1); border: 1px solid rgba(255,71,87,0.3); border-radius: var(--radius); padding: 12px 16px; font-size: 13px; color: var(--red); display: none; margin-bottom: 12px; }
     .manual-input-area { display: none; }
     .manual-input { width: 100%; background: var(--surface2); border: 2px solid var(--border); border-radius: var(--radius); padding: 14px 16px; font-size: 18px; color: var(--text); font-family: 'Noto Sans JP', sans-serif; outline: none; transition: border-color 0.2s; }
     .manual-input:focus { border-color: var(--blue); }
@@ -328,7 +313,7 @@
         <div class="rule-item"><span class="rule-icon">✅</span><span>正解：+10点＋時間+5秒</span></div>
         <div class="rule-item"><span class="rule-icon">❌</span><span>不正解：減点なし・時間-5秒</span></div>
         <div class="rule-item"><span class="rule-icon">🃏</span><span>4択で回答・途中押しOK</span></div>
-        <div class="rule-item"><span class="rule-icon">🃏</span><span>各ジャンル30問ランダム出題</span></div>
+        <div class="rule-item"><span class="rule-icon">🃏</span><span>各ジャンル20問ランダム出題</span></div>
         <div class="rule-item"><span class="rule-icon">🏆</span><span>ローカルランキング記録</span></div>
       </div>
     </div>
@@ -385,23 +370,6 @@
     </div>
 
     <div class="answer-section">
-      <div class="speech-no-support" id="speech-no-support">
-        ⚠️ このブラウザは音声認識に対応していません。テキスト入力でお答えください。
-      </div>
-
-      <div class="speech-box" id="speech-box">
-        <div class="speech-listening">
-          <div class="speech-wave">
-            <span></span><span></span><span></span><span></span><span></span>
-          </div>
-          <span class="speech-label" id="speech-label">🎙 聞いています...</span>
-        </div>
-        <div class="speech-result" id="speech-result">　</div>
-        <div class="speech-confirm" id="speech-confirm">
-          <button class="btn-ng" id="btn-speech-ng">❌ 再回答</button>
-          <button class="btn-ok" id="btn-speech-ok">✅ これで確定</button>
-        </div>
-      </div>
 
       <div class="manual-input-area" id="manual-input-area">
         <input type="text" class="manual-input" id="manual-input" placeholder="ここに回答を入力してEnter">
@@ -465,6 +433,15 @@
       </div>
       <button class="btn btn-primary" id="btn-retry">🔄 もう一度このジャンル</button>
       <button class="btn btn-secondary" style="margin-top:10px" id="btn-go-top">🏠 ジャンル選択に戻る</button>
+    </div>
+
+    <div class="hanamaru-banner" id="hanamaru-banner" style="display:none; width:100%; max-width:520px; margin-top:16px; background:linear-gradient(135deg, rgba(255,215,0,0.16), rgba(245,166,35,0.10)); border:1.5px solid rgba(255,215,0,0.55); border-radius:var(--radius); padding:18px 16px; text-align:center;">
+      <div style="font-size:34px; line-height:1;">🌸</div>
+      <div style="font-weight:900; color:var(--gold); margin-top:6px; font-size:17px;">花丸スタンプ獲得！（200点以上）</div>
+      <div style="font-size:12px; color:var(--text2); margin-top:4px;">ポータルの花丸ランキングに反映されます</div>
+      <input type="text" id="hanamaru-name" placeholder="花丸ランキング用の名前（任意）" maxlength="12" style="width:100%; max-width:280px; margin:12px auto 0; display:block; padding:11px 14px; border-radius:10px; border:1.5px solid rgba(255,215,0,0.4); background:var(--surface2); color:var(--text); text-align:center; font-size:15px;">
+      <button class="btn btn-primary" id="btn-hanamaru" style="margin-top:10px; max-width:280px;">🌸 花丸をランキングに記録</button>
+      <div id="hanamaru-status" style="font-size:12px; color:var(--green); margin-top:8px; min-height:1em;"></div>
     </div>
 
     <div class="wrong-list-section" id="wrong-list-section">

@@ -30,7 +30,7 @@ const App = (() => {
   const CORRECT_TIME_BONUS = 5;
   const WRONG_TIME_PENALTY = 5;
   const QUESTIONS_PER_GAME = 20;
-  const STAMP_GAME_ID = 'hayaoshi-quiz-dojo';  /* ポータル花丸スタンプ用ID（GitHubリポジトリ名と一致させる）*/
+  const STAMP_GAME_ID = 'quiz-dojo';  /* ポータル花丸スタンプ用ID（GitHubリポジトリ名と一致させる）*/
   const HANAMARU_MIN = 200;  /* このスコア以上で花丸 */
   const TYPING_SPEED = 90;
 

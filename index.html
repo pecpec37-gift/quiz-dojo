@@ -1,972 +1,543 @@
 <!DOCTYPE html>
 <html lang="ja">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>⚫ 囲碁クイズ道場</title>
-<style>
-  @import url('https://fonts.googleapis.com/css2?family=Noto+Serif+JP:wght@400;700;900&family=Zen+Kaku+Gothic+New:wght@400;700;900&display=swap');
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>早押しクイズ道場 🎯</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;700;900&family=Zen+Antique+Soft&family=Kaisei+Decol:wght@400;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #0d0d0f;
+      --surface: #16161a;
+      --surface2: #1e1e24;
+      --border: #2a2a35;
+      --text: #e8e8f0;
+      --text2: #9090a8;
+      --accent: #f5a623;
+      --accent2: #ff6b35;
+      --green: #00d084;
+      --red: #ff4757;
+      --blue: #4ecdc4;
+      --purple: #a29bfe;
+      --gold: #ffd700;
+      --radius: 12px;
+      --glow: 0 0 20px rgba(245,166,35,0.3);
+    }
 
-  :root {
-    --bg: #1a1209;
-    --surface: #2a1e0f;
-    --surface2: #3a2c18;
-    --gold: #d4a017;
-    --gold-light: #f0c040;
-    --accent: #8b6914;
-    --text: #f0e8d0;
-    --text-muted: #a89060;
-    --correct: #4caf50;
-    --wrong: #e53935;
-    --border: #5a4020;
-    --wood: #8B6914;
-    --radius: 12px;
-  }
-  * { box-sizing: border-box; margin: 0; padding: 0; }
-  body {
-    font-family: 'Zen Kaku Gothic New', sans-serif;
-    background: var(--bg);
-    color: var(--text);
-    min-height: 100vh;
-    background-image:
-      radial-gradient(ellipse at 20% 20%, rgba(212,160,23,0.08) 0%, transparent 50%),
-      radial-gradient(ellipse at 80% 80%, rgba(139,105,20,0.06) 0%, transparent 50%);
-  }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
 
-  /* SCREENS */
-  .screen { display: none; padding: 20px; max-width: 760px; margin: 0 auto; min-height: 100vh; flex-direction: column; align-items: center; justify-content: flex-start; }
-  .screen.active { display: flex; }
+    body {
+      font-family: 'Noto Sans JP', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      overflow-x: hidden;
+    }
 
-  /* TOP */
-  #screen-top { padding-top: 30px; }
-  .title-wrap { text-align: center; margin-bottom: 28px; }
-  .title-icon { font-size: 60px; display: block; margin-bottom: 6px; animation: float 3s ease-in-out infinite; }
-  @keyframes float { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-8px)} }
-  .title-main {
-    font-family: 'Noto Serif JP', serif;
-    font-size: clamp(26px, 7vw, 46px);
-    font-weight: 900;
-    letter-spacing: 0.1em;
-    background: linear-gradient(135deg, var(--gold-light), var(--gold), #a06010);
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    background-clip: text;
-  }
-  .title-sub { font-size: 13px; color: var(--text-muted); letter-spacing: 0.2em; margin-top: 5px; }
+    .screen { display: none; min-height: 100vh; animation: fadeIn 0.3s ease; }
+    .screen.active { display: flex; flex-direction: column; }
 
-  /* Rules */
-  .rules-box {
-    background: var(--surface); border: 1px solid var(--border);
-    border-radius: var(--radius); padding: 16px 20px; width: 100%; margin-bottom: 22px;
-    position: relative; overflow: hidden;
-  }
-  .rules-box::before {
-    content:''; position: absolute; top: 0; left: 0; right: 0; height: 2px;
-    background: linear-gradient(90deg, transparent, var(--gold), transparent);
-  }
-  .rules-title { font-size: 12px; color: var(--gold); letter-spacing: 0.15em; margin-bottom: 8px; font-weight: 700; }
-  .rules-list { list-style: none; }
-  .rules-list li { font-size: 12px; color: var(--text-muted); padding: 2px 0; line-height: 1.6; }
-  .rules-list li strong { color: var(--text); }
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+    @keyframes slideIn { from { opacity: 0; transform: translateX(-20px); } to { opacity: 1; transform: translateX(0); } }
+    @keyframes pulse { 0%,100% { transform: scale(1); } 50% { transform: scale(1.05); } }
+    @keyframes shake { 0%,100%{transform:translateX(0)} 20%{transform:translateX(-8px)} 40%{transform:translateX(8px)} 60%{transform:translateX(-5px)} 80%{transform:translateX(5px)} }
+    @keyframes glow { 0%,100%{box-shadow:var(--glow)} 50%{box-shadow:0 0 40px rgba(245,166,35,0.6)} }
+    @keyframes timerPulse { 0%,100%{opacity:1} 50%{opacity:0.5} }
+    @keyframes countIn { from{transform:scale(0.5);opacity:0} 50%{transform:scale(1.2)} to{transform:scale(1);opacity:1} }
+    @keyframes float { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-8px)} }
+    @keyframes scanline { 0% { top: -100%; } 100% { top: 200%; } }
+    @keyframes waveBar { 0%,100% { height: 6px; } 50% { height: 22px; } }
 
-  /* Genre */
-  .genre-title { font-size: 13px; color: var(--gold); letter-spacing: 0.2em; margin-bottom: 8px; text-align: center; font-weight: 700; }
-  .genre-hint { font-size: 11px; color: var(--text-muted); text-align: center; margin-bottom: 14px; }
-  .genre-grid {
-    display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
-    gap: 10px; width: 100%; margin-bottom: 24px;
-  }
-  .genre-card {
-    background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius);
-    padding: 16px 12px; text-align: center; cursor: pointer; transition: all 0.2s;
-    position: relative; overflow: hidden;
-  }
-  .genre-card::after {
-    content:''; position: absolute; inset: 0;
-    background: linear-gradient(135deg, rgba(212,160,23,0.15), transparent); opacity: 0; transition: opacity 0.2s;
-  }
-  .genre-card:hover { border-color: var(--gold); transform: translateY(-3px); box-shadow: 0 8px 24px rgba(212,160,23,0.2); }
-  .genre-card:hover::after { opacity: 1; }
-  .genre-card:active { transform: translateY(0); }
-  .genre-icon { font-size: 30px; display: block; margin-bottom: 7px; }
-  .genre-name { font-size: 14px; font-weight: 700; color: var(--text); margin-bottom: 4px; }
-  .genre-count { font-size: 10px; color: var(--text-muted); }
-  .genre-badge { display: inline-block; background: var(--gold); color: var(--bg); font-size: 9px; font-weight: 700; padding: 2px 7px; border-radius: 20px; margin-top: 5px; }
+    #screen-top {
+      background:
+        radial-gradient(ellipse at 20% 50%, rgba(245,166,35,0.08) 0%, transparent 50%),
+        radial-gradient(ellipse at 80% 20%, rgba(255,107,53,0.06) 0%, transparent 50%),
+        var(--bg);
+    }
 
-  .btn-ranking {
-    background: transparent; border: 1px solid var(--border); color: var(--text-muted);
-    padding: 9px 22px; border-radius: 30px; font-size: 12px; cursor: pointer;
-    letter-spacing: 0.1em; transition: all 0.2s; margin-bottom: 14px; font-family: inherit;
-  }
-  .btn-ranking:hover { border-color: var(--gold); color: var(--gold); }
-  .portal-link { color: var(--text-muted); text-decoration: none; font-size: 12px; letter-spacing: 0.05em; transition: color 0.2s; border-bottom: 1px solid transparent; padding-bottom: 2px; }
-  .portal-link:hover { color: var(--gold-light); border-bottom-color: var(--gold-light); }
+    .top-header { text-align: center; padding: 48px 20px 32px; position: relative; }
+    .top-header::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: url("data:image/svg+xml,%3Csvg width='40' height='40' viewBox='0 0 40 40' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='%23ffffff' fill-opacity='0.02'%3E%3Cpath d='M0 0h20v20H0V0zm20 20h20v20H20V20z'/%3E%3C/g%3E%3C/svg%3E");
+      pointer-events: none;
+    }
 
-  /* NAME */
-  #screen-name { justify-content: center; }
-  .name-box {
-    background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius);
-    padding: 34px 28px; width: 100%; max-width: 400px; text-align: center;
-  }
-  .name-box h2 { font-family: 'Noto Serif JP', serif; font-size: 19px; color: var(--gold); margin-bottom: 7px; }
-  .name-box p { font-size: 11px; color: var(--text-muted); margin-bottom: 20px; }
-  .selected-genre-label { background: var(--surface2); border: 1px solid var(--border); border-radius: 8px; padding: 9px; margin-bottom: 18px; font-size: 12px; color: var(--text-muted); }
-  .selected-genre-label strong { color: var(--gold); }
-  .name-input {
-    width: 100%; background: var(--surface2); border: 1px solid var(--border); border-radius: 8px;
-    padding: 11px 14px; font-size: 16px; color: var(--text); font-family: inherit;
-    margin-bottom: 18px; outline: none; transition: border-color 0.2s; text-align: center;
-  }
-  .name-input:focus { border-color: var(--gold); }
-  .name-input::placeholder { color: var(--text-muted); }
-  .btn-start {
-    width: 100%; background: linear-gradient(135deg, var(--gold), var(--wood));
-    border: none; border-radius: 10px; padding: 13px; font-size: 17px; font-weight: 700;
-    color: var(--bg); cursor: pointer; font-family: 'Noto Serif JP', serif;
-    letter-spacing: 0.1em; transition: all 0.2s; box-shadow: 0 4px 16px rgba(212,160,23,0.4);
-  }
-  .btn-start:hover { transform: translateY(-2px); box-shadow: 0 8px 24px rgba(212,160,23,0.5); }
-  .btn-back { background: transparent; border: none; color: var(--text-muted); font-size: 12px; cursor: pointer; margin-top: 12px; font-family: inherit; text-decoration: underline; transition: color 0.2s; }
-  .btn-back:hover { color: var(--text); }
+    .dojo-emblem { font-size: 64px; margin-bottom: 8px; animation: float 3s ease-in-out infinite; display: inline-block; }
+    .top-title {
+      font-family: 'Zen Antique Soft', serif;
+      font-size: clamp(28px, 6vw, 52px);
+      font-weight: 400;
+      background: linear-gradient(135deg, #f5a623, #ff6b35, #ffd700);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      margin-bottom: 8px;
+      letter-spacing: 0.1em;
+    }
+    .top-subtitle { color: var(--text2); font-size: 14px; letter-spacing: 0.2em; margin-bottom: 4px; }
+    .question-count {
+      display: inline-flex; align-items: center; gap: 6px;
+      background: rgba(245,166,35,0.1); border: 1px solid rgba(245,166,35,0.3);
+      border-radius: 100px; padding: 4px 14px; font-size: 12px; color: var(--accent); margin-top: 8px;
+    }
 
-  /* GAME */
-  #screen-game { padding-top: 12px; }
-  .game-header { display: flex; align-items: center; justify-content: space-between; width: 100%; margin-bottom: 12px; gap: 8px; flex-wrap: wrap; }
-  .q-counter { font-size: 12px; color: var(--text-muted); white-space: nowrap; }
-  .score-display { font-family: 'Noto Serif JP', serif; font-size: 19px; font-weight: 700; color: var(--gold); white-space: nowrap; }
-  .timer-wrap { display: flex; align-items: center; gap: 5px; white-space: nowrap; }
-  .timer-label { font-size: 11px; color: var(--text-muted); }
-  .timer-value { font-family: 'Noto Serif JP', serif; font-size: 21px; font-weight: 700; color: var(--gold-light); min-width: 44px; text-align: right; transition: color 0.3s; }
-  .timer-value.danger { color: var(--wrong); animation: pulse 0.5s ease-in-out infinite alternate; }
-  @keyframes pulse { from{opacity:1} to{opacity:0.5} }
-  .timer-unit { font-size: 11px; color: var(--text-muted); }
-  .progress-bar { width: 100%; height: 4px; background: var(--surface2); border-radius: 2px; margin-bottom: 14px; overflow: hidden; }
-  .progress-fill { height: 100%; background: linear-gradient(90deg, var(--gold), var(--gold-light)); border-radius: 2px; transition: width 0.4s ease; }
-  .q-type-badge { display: inline-block; padding: 3px 11px; border-radius: 20px; font-size: 11px; font-weight: 700; letter-spacing: 0.1em; margin-bottom: 9px; }
-  .q-type-badge.four { background: rgba(100,160,255,0.2); color: #80b4ff; border: 1px solid rgba(100,160,255,0.3); }
-  .q-type-badge.ox { background: rgba(212,160,23,0.2); color: var(--gold); border: 1px solid rgba(212,160,23,0.3); }
-  .question-box { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 20px 18px; width: 100%; margin-bottom: 14px; }
-  .question-text { font-size: clamp(13px, 3.5vw, 16px); line-height: 1.7; color: var(--text); font-weight: 700; }
-  .options-grid { display: grid; gap: 9px; width: 100%; margin-bottom: 12px; }
-  .options-grid.four-choice { grid-template-columns: 1fr 1fr; }
-  .options-grid.ox-choice { grid-template-columns: 1fr 1fr; }
-  .option-btn {
-    background: var(--surface); border: 1px solid var(--border); border-radius: 10px;
-    padding: 13px 10px; font-size: clamp(12px, 3vw, 14px); color: var(--text);
-    cursor: pointer; font-family: inherit; transition: all 0.15s; line-height: 1.4;
-    text-align: center; font-weight: 500;
-  }
-  .option-btn:hover:not(:disabled) { border-color: var(--gold); background: rgba(212,160,23,0.1); transform: scale(1.02); }
-  .option-btn:disabled { cursor: default; }
-  .option-btn.correct { background: rgba(76,175,80,0.2); border-color: var(--correct); color: #81c784; }
-  .option-btn.wrong { background: rgba(229,57,53,0.2); border-color: var(--wrong); color: #ef9a9a; }
-  .option-btn.ox-btn { font-size: 34px; padding: 18px; }
-  .feedback-bar { width: 100%; padding: 9px 14px; border-radius: 8px; font-size: 13px; font-weight: 700; text-align: center; margin-bottom: 12px; opacity: 0; transform: translateY(-6px); transition: all 0.3s; pointer-events: none; }
-  .feedback-bar.show { opacity: 1; transform: translateY(0); }
-  .feedback-bar.correct { background: rgba(76,175,80,0.2); color: #81c784; border: 1px solid rgba(76,175,80,0.4); }
-  .feedback-bar.wrong { background: rgba(229,57,53,0.2); color: #ef9a9a; border: 1px solid rgba(229,57,53,0.4); }
-  .btn-next { background: linear-gradient(135deg, var(--gold), var(--wood)); border: none; border-radius: 10px; padding: 11px 30px; font-size: 14px; font-weight: 700; color: var(--bg); cursor: pointer; font-family: inherit; letter-spacing: 0.1em; opacity: 0; transition: all 0.3s; pointer-events: none; }
-  .btn-next.show { opacity: 1; pointer-events: all; }
-  .btn-next:hover { transform: translateY(-2px); box-shadow: 0 4px 14px rgba(212,160,23,0.4); }
+    .top-rules { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); margin: 0 20px 28px; padding: 16px 20px; }
+    .top-rules h3 { font-size: 12px; color: var(--text2); letter-spacing: 0.15em; margin-bottom: 12px; text-transform: uppercase; }
+    .rules-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+    .rule-item { display: flex; align-items: flex-start; gap: 8px; font-size: 13px; color: var(--text2); line-height: 1.5; }
+    .rule-icon { font-size: 16px; flex-shrink: 0; margin-top: 1px; }
 
-  /* RESULT */
-  #screen-result { justify-content: flex-start; padding-top: 30px; }
-  .result-box { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 32px 22px; width: 100%; max-width: 500px; text-align: center; position: relative; overflow: hidden; }
-  .result-box::before { content:''; position: absolute; top: 0; left: 0; right: 0; height: 3px; background: linear-gradient(90deg, transparent, var(--gold), var(--gold-light), var(--gold), transparent); }
-  .result-trophy { font-size: 52px; margin-bottom: 10px; animation: bounceIn 0.6s ease; }
-  @keyframes bounceIn { 0%{transform:scale(0);opacity:0} 60%{transform:scale(1.1)} 100%{transform:scale(1);opacity:1} }
-  .result-total { font-family: 'Noto Serif JP', serif; font-size: clamp(50px, 14vw, 76px); font-weight: 900; background: linear-gradient(135deg, var(--gold-light), var(--gold)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; line-height: 1; margin-bottom: 4px; }
-  .result-label { font-size: 13px; color: var(--text-muted); letter-spacing: 0.15em; margin-bottom: 22px; }
-  .result-stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-bottom: 24px; }
-  .stat-item { background: var(--surface2); border: 1px solid var(--border); border-radius: 8px; padding: 12px 8px; }
-  .stat-num { font-size: 22px; font-weight: 700; color: var(--gold); }
-  .stat-lbl { font-size: 10px; color: var(--text-muted); margin-top: 3px; letter-spacing: 0.05em; }
-  .btn-retry { background: linear-gradient(135deg, var(--gold), var(--wood)); border: none; border-radius: 10px; padding: 12px 26px; font-size: 14px; font-weight: 700; color: var(--bg); cursor: pointer; font-family: 'Noto Serif JP', serif; letter-spacing: 0.1em; transition: all 0.2s; margin-bottom: 10px; display: block; width: 100%; }
-  .btn-retry:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(212,160,23,0.4); }
-  .btn-to-top { background: transparent; border: 1px solid var(--border); border-radius: 10px; padding: 10px 26px; font-size: 12px; color: var(--text-muted); cursor: pointer; font-family: inherit; transition: all 0.2s; display: block; width: 100%; margin-bottom: 10px; }
-  .btn-to-top:hover { border-color: var(--gold); color: var(--gold); }
-  .wrong-review { margin-top: 22px; width: 100%; max-width: 500px; text-align: left; }
-  .wrong-review-title { font-size: 13px; color: var(--gold); letter-spacing: 0.1em; font-weight: 700; margin-bottom: 12px; text-align: center; border-bottom: 1px solid var(--border); padding-bottom: 9px; }
-  .wrong-item { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 14px; margin-bottom: 9px; animation: slideIn 0.4s ease both; }
-  @keyframes slideIn { from{opacity:0;transform:translateX(-10px)} to{opacity:1;transform:translateX(0)} }
-  .wrong-q-text { font-size: 12px; color: var(--text); margin-bottom: 7px; line-height: 1.6; }
-  .wrong-answer-row { display: flex; gap: 10px; font-size: 11px; flex-wrap: wrap; }
-  .your-ans { color: #ef9a9a; }
-  .correct-ans { color: #81c784; }
+    .genre-section { padding: 0 20px 32px; }
+    .genre-section h2 { font-size: 13px; letter-spacing: 0.2em; color: var(--text2); margin-bottom: 14px; text-transform: uppercase; }
+    .genre-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; }
+    @media (min-width: 480px) { .genre-grid { grid-template-columns: repeat(3, 1fr); } }
+    @media (min-width: 700px) { .genre-grid { grid-template-columns: repeat(4, 1fr); } }
 
-  /* RANKING */
-  #screen-ranking { padding-top: 22px; }
-  .ranking-header { text-align: center; margin-bottom: 22px; }
-  .ranking-header h2 { font-family: 'Noto Serif JP', serif; font-size: 22px; color: var(--gold); }
-  .ranking-genre-tabs { display: flex; flex-wrap: wrap; gap: 7px; justify-content: center; margin-bottom: 18px; width: 100%; }
-  .tab-btn { background: var(--surface); border: 1px solid var(--border); border-radius: 20px; padding: 5px 12px; font-size: 11px; color: var(--text-muted); cursor: pointer; font-family: inherit; transition: all 0.2s; }
-  .tab-btn.active, .tab-btn:hover { border-color: var(--gold); color: var(--gold); background: rgba(212,160,23,0.1); }
-  .ranking-list { width: 100%; max-width: 500px; }
-  .ranking-empty { text-align: center; color: var(--text-muted); font-size: 13px; padding: 36px 0; }
-  .rank-item { display: flex; align-items: center; gap: 12px; background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 12px 14px; margin-bottom: 7px; animation: slideIn 0.3s ease both; }
-  .rank-num { font-family: 'Noto Serif JP', serif; font-size: 20px; font-weight: 900; min-width: 30px; text-align: center; }
-  .rank-num.gold { color: #ffd700; } .rank-num.silver { color: #c0c0c0; } .rank-num.bronze { color: #cd7f32; } .rank-num.other { color: var(--text-muted); }
-  .rank-info { flex: 1; }
-  .rank-name { font-size: 14px; font-weight: 700; color: var(--text); }
-  .rank-genre { font-size: 10px; color: var(--text-muted); margin-top: 2px; }
-  .rank-score { font-family: 'Noto Serif JP', serif; font-size: 19px; font-weight: 700; color: var(--gold); }
-  .rank-score span { font-size: 10px; color: var(--text-muted); }
+    .genre-card {
+      background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius);
+      padding: 16px 12px; cursor: pointer; transition: all 0.2s ease; text-align: center; position: relative; overflow: hidden;
+    }
+    .genre-card::before { content: ''; position: absolute; inset: 0; opacity: 0; transition: opacity 0.2s; background: linear-gradient(135deg, rgba(255,255,255,0.05), transparent); }
+    .genre-card:hover::before { opacity: 1; }
+    .genre-card:hover { transform: translateY(-3px); border-color: rgba(255,255,255,0.2); box-shadow: 0 8px 32px rgba(0,0,0,0.4); }
+    .genre-card:active { transform: scale(0.97); }
+    .genre-card.random {
+      grid-column: span 2;
+      background: linear-gradient(135deg, rgba(245,166,35,0.15), rgba(255,107,53,0.1));
+      border-color: rgba(245,166,35,0.4);
+      animation: glow 3s ease-in-out infinite;
+    }
+    @media (min-width: 480px) { .genre-card.random { grid-column: span 3; } }
+    @media (min-width: 700px) { .genre-card.random { grid-column: span 4; } }
+    .genre-icon { font-size: 28px; margin-bottom: 6px; }
+    .genre-label { font-size: 13px; font-weight: 700; color: var(--text); }
+    .genre-count { font-size: 11px; color: var(--text2); margin-top: 3px; }
 
-  @media (max-width: 480px) {
-    .genre-grid { grid-template-columns: 1fr 1fr; }
-    .options-grid.four-choice { grid-template-columns: 1fr; }
-  }
-  @media (max-width: 360px) {
-    .genre-grid { grid-template-columns: 1fr; }
-  }
-</style>
-<script src="https://pecpec37-gift.github.io/portal/stamp.js"></script>
+    #screen-confirm { justify-content: center; align-items: center; padding: 20px; background: var(--bg); }
+    .confirm-card { background: var(--surface); border: 1px solid var(--border); border-radius: 20px; padding: 36px 28px; max-width: 400px; width: 100%; text-align: center; }
+    .confirm-genre-icon { font-size: 64px; margin-bottom: 16px; }
+    .confirm-genre-name { font-family: 'Kaisei Decol', serif; font-size: 28px; font-weight: 700; color: var(--accent); margin-bottom: 8px; }
+    .confirm-detail { color: var(--text2); font-size: 14px; margin-bottom: 28px; }
+    .confirm-rules { background: var(--surface2); border-radius: var(--radius); padding: 16px; margin-bottom: 28px; text-align: left; }
+    .confirm-rule { display: flex; align-items: center; gap: 10px; padding: 6px 0; font-size: 14px; }
+    .confirm-rule:not(:last-child) { border-bottom: 1px solid var(--border); }
+
+    .btn { display: block; width: 100%; padding: 16px; border: none; border-radius: var(--radius); font-family: 'Noto Sans JP', sans-serif; font-size: 16px; font-weight: 700; cursor: pointer; transition: all 0.2s; letter-spacing: 0.05em; }
+    .btn-primary { background: linear-gradient(135deg, var(--accent), var(--accent2)); color: #fff; box-shadow: 0 4px 20px rgba(245,166,35,0.4); }
+    .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 8px 30px rgba(245,166,35,0.5); }
+    .btn-primary:active { transform: scale(0.98); }
+    .btn-secondary { background: transparent; color: var(--text2); border: 1px solid var(--border); margin-top: 10px; }
+    .btn-secondary:hover { background: var(--surface2); color: var(--text); }
+    .btn-answer { background: linear-gradient(135deg, #e74c3c, #c0392b); color: #fff; font-size: 18px; padding: 18px; box-shadow: 0 4px 24px rgba(231,76,60,0.5); animation: pulse 1s ease-in-out infinite; border-radius: 14px; }
+    .btn-answer:active { transform: scale(0.95); animation: none; }
+
+    #screen-game { background: radial-gradient(ellipse at top, rgba(78,205,196,0.05) 0%, transparent 50%), var(--bg); padding: 0; }
+    .game-header { display: flex; align-items: center; justify-content: space-between; padding: 12px 16px; background: var(--surface); border-bottom: 1px solid var(--border); position: sticky; top: 0; z-index: 10; }
+    .game-progress { font-size: 13px; color: var(--text2); }
+    .game-progress span { color: var(--text); font-weight: 700; }
+    .game-score { display: flex; align-items: center; gap: 6px; background: rgba(245,166,35,0.1); border: 1px solid rgba(245,166,35,0.3); border-radius: 100px; padding: 4px 12px; font-weight: 900; font-size: 16px; color: var(--accent); }
+
+    .timer-bar-wrap { padding: 0 16px; margin-top: 8px; }
+    .timer-display { display: flex; align-items: center; justify-content: space-between; margin-bottom: 6px; }
+    .timer-label { font-size: 11px; color: var(--text2); letter-spacing: 0.1em; }
+    .timer-value { font-family: 'Kaisei Decol', serif; font-size: 28px; font-weight: 700; color: var(--green); transition: color 0.3s; }
+    .timer-value.warning { color: var(--accent); }
+    .timer-value.danger { color: var(--red); animation: timerPulse 0.5s ease-in-out infinite; }
+    .timer-bar { width: 100%; height: 6px; background: var(--surface2); border-radius: 100px; overflow: hidden; }
+    .timer-fill { height: 100%; border-radius: 100px; transition: width 1s linear, background 0.3s; background: linear-gradient(90deg, var(--green), #00b894); }
+    .timer-fill.warning { background: linear-gradient(90deg, var(--accent), #f39c12); }
+    .timer-fill.danger { background: linear-gradient(90deg, var(--red), #e84393); }
+
+    .question-area { padding: 20px 16px; flex: 1; }
+    .question-num { font-size: 11px; color: var(--text2); letter-spacing: 0.15em; text-transform: uppercase; margin-bottom: 10px; }
+    .question-text { font-family: 'Kaisei Decol', serif; font-size: clamp(18px, 4vw, 26px); line-height: 1.8; color: var(--text); min-height: 120px; position: relative; background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 20px; }
+    .cursor-blink { display: inline-block; width: 3px; height: 1.1em; background: var(--accent); vertical-align: text-bottom; animation: timerPulse 0.6s ease-in-out infinite; margin-left: 2px; }
+
+    .answer-section { padding: 0 16px 24px; display: flex; flex-direction: column; gap: 12px; }
+
+    .speech-box { display: none; background: var(--surface); border: 2px solid var(--blue); border-radius: var(--radius); padding: 16px; animation: slideIn 0.3s ease; }
+    .speech-box.active { display: block; }
+    .speech-listening { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; }
+    .speech-wave { display: flex; align-items: center; gap: 3px; height: 24px; }
+    .speech-wave span { display: block; width: 4px; background: var(--blue); border-radius: 2px; animation: waveBar 1s ease-in-out infinite; }
+    .speech-wave span:nth-child(1) { animation-delay: 0s; }
+    .speech-wave span:nth-child(2) { animation-delay: 0.1s; }
+    .speech-wave span:nth-child(3) { animation-delay: 0.2s; }
+    .speech-wave span:nth-child(4) { animation-delay: 0.3s; }
+    .speech-wave span:nth-child(5) { animation-delay: 0.4s; }
+    .speech-label { font-size: 13px; color: var(--blue); font-weight: 700; }
+    .speech-result { font-size: 20px; font-weight: 700; color: var(--text); min-height: 36px; letter-spacing: 0.05em; }
+    .speech-confirm { display: none; gap: 10px; margin-top: 12px; }
+    .speech-confirm.active { display: flex; }
+    .btn-ok { flex: 1; padding: 12px; background: var(--green); color: #fff; border: none; border-radius: 8px; font-size: 16px; font-weight: 700; cursor: pointer; transition: all 0.2s; }
+    .btn-ok:hover { background: #00b894; }
+    .btn-ng { flex: 1; padding: 12px; background: var(--red); color: #fff; border: none; border-radius: 8px; font-size: 16px; font-weight: 700; cursor: pointer; transition: all 0.2s; }
+    .btn-ng:hover { background: #c0392b; }
+
+    .result-overlay { display: none; position: fixed; inset: 0; z-index: 100; justify-content: center; align-items: center; flex-direction: column; gap: 16px; padding: 20px; }
+    .result-overlay.show { display: flex; }
+    .result-overlay::before { content: ''; position: absolute; inset: 0; background: rgba(0,0,0,0.85); backdrop-filter: blur(4px); }
+    .result-box { position: relative; z-index: 1; background: var(--surface); border-radius: 20px; padding: 32px 28px; max-width: 400px; width: 100%; text-align: center; animation: countIn 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275); border: 2px solid var(--border); }
+    .result-box.correct { border-color: var(--green); box-shadow: 0 0 40px rgba(0,208,132,0.3); }
+    .result-box.incorrect { border-color: var(--red); box-shadow: 0 0 40px rgba(255,71,87,0.3); }
+    .result-emoji { font-size: 56px; margin-bottom: 10px; }
+    .result-label { font-size: 28px; font-weight: 900; margin-bottom: 12px; }
+    .result-box.correct .result-label { color: var(--green); }
+    .result-box.incorrect .result-label { color: var(--red); }
+    .result-answer-show { background: var(--surface2); border-radius: 10px; padding: 14px; margin: 12px 0; }
+    .result-answer-label { font-size: 11px; color: var(--text2); letter-spacing: 0.15em; margin-bottom: 6px; }
+    .result-answer-q { font-size: 13px; color: var(--text2); margin-bottom: 6px; line-height: 1.6; }
+    .result-answer-a { font-size: 20px; font-weight: 900; color: var(--accent); }
+    .result-feedback { font-size: 14px; color: var(--text2); margin-bottom: 20px; }
+    .result-feedback .highlight { font-weight: 700; }
+    .result-feedback .highlight.plus { color: var(--green); }
+    .result-feedback .highlight.minus { color: var(--red); }
+
+    #screen-final { background: radial-gradient(ellipse at 50% 0%, rgba(255,215,0,0.12) 0%, transparent 60%), var(--bg); padding: 0 0 40px; align-items: center; }
+    .final-header { width: 100%; padding: 40px 20px 24px; text-align: center; }
+    .final-trophy { font-size: 72px; margin-bottom: 12px; animation: float 3s ease-in-out infinite; display: inline-block; }
+    .final-title { font-family: 'Zen Antique Soft', serif; font-size: 32px; background: linear-gradient(135deg, var(--gold), var(--accent)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; margin-bottom: 6px; }
+    .final-score-card { background: var(--surface); border: 2px solid rgba(255,215,0,0.4); border-radius: 20px; padding: 28px; width: calc(100% - 40px); max-width: 440px; text-align: center; box-shadow: 0 0 40px rgba(255,215,0,0.15); }
+    .final-score-num { font-family: 'Kaisei Decol', serif; font-size: 72px; font-weight: 700; color: var(--gold); line-height: 1; margin-bottom: 4px; }
+    .final-score-label { font-size: 14px; color: var(--text2); margin-bottom: 24px; }
+    .final-stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-bottom: 24px; }
+    .stat-box { background: var(--surface2); border-radius: 10px; padding: 12px 8px; }
+    .stat-val { font-size: 22px; font-weight: 900; }
+    .stat-lbl { font-size: 11px; color: var(--text2); margin-top: 2px; }
+    .stat-val.green { color: var(--green); }
+    .stat-val.red { color: var(--red); }
+    .stat-val.blue { color: var(--blue); }
+
+    .wrong-list-section { width: calc(100% - 40px); max-width: 440px; margin-top: 20px; }
+    .wrong-list-title { font-size: 13px; color: var(--text2); letter-spacing: 0.15em; margin-bottom: 12px; text-transform: uppercase; display: flex; align-items: center; gap: 8px; }
+    .wrong-item { background: var(--surface); border: 1px solid var(--border); border-left: 4px solid var(--red); border-radius: 10px; padding: 14px 16px; margin-bottom: 10px; animation: slideIn 0.3s ease; }
+    .wrong-item-q { font-size: 14px; color: var(--text2); margin-bottom: 6px; line-height: 1.6; }
+    .wrong-item-a { font-size: 16px; font-weight: 700; color: var(--accent); }
+
+    #screen-ranking { background: var(--bg); padding-bottom: 40px; }
+    .ranking-header { padding: 40px 20px 20px; text-align: center; background: linear-gradient(180deg, rgba(245,166,35,0.08), transparent); }
+    .ranking-title { font-family: 'Zen Antique Soft', serif; font-size: 28px; color: var(--accent); margin-bottom: 4px; }
+    .ranking-list { padding: 0 20px; }
+    .ranking-item { display: flex; align-items: center; gap: 14px; background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 14px 16px; margin-bottom: 8px; animation: slideIn 0.3s ease; }
+    .ranking-item:nth-child(1) { border-color: rgba(255,215,0,0.5); background: rgba(255,215,0,0.05); }
+    .ranking-item:nth-child(2) { border-color: rgba(192,192,192,0.5); }
+    .ranking-item:nth-child(3) { border-color: rgba(205,127,50,0.5); }
+    .rank-num { font-family: 'Kaisei Decol', serif; font-size: 22px; font-weight: 700; width: 36px; text-align: center; flex-shrink: 0; }
+    .rank-num.gold { color: var(--gold); }
+    .rank-num.silver { color: #c0c0c0; }
+    .rank-num.bronze { color: #cd7f32; }
+    .rank-info { flex: 1; min-width: 0; }
+    .rank-genre { font-size: 12px; color: var(--text2); margin-bottom: 2px; }
+    .rank-date { font-size: 11px; color: var(--text2); }
+    .rank-score { font-family: 'Kaisei Decol', serif; font-size: 24px; font-weight: 700; color: var(--accent); }
+    .rank-correct { font-size: 12px; color: var(--text2); text-align: right; }
+
+    .feedback-toast { position: fixed; top: 80px; left: 50%; transform: translateX(-50%) translateY(-20px); background: var(--surface); border: 2px solid var(--border); border-radius: 100px; padding: 10px 24px; font-size: 16px; font-weight: 700; z-index: 200; opacity: 0; transition: all 0.3s ease; pointer-events: none; white-space: nowrap; }
+    .feedback-toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+    .feedback-toast.positive { border-color: var(--green); color: var(--green); }
+    .feedback-toast.negative { border-color: var(--red); color: var(--red); }
+
+    .bottom-nav { position: fixed; bottom: 0; left: 0; right: 0; display: flex; background: var(--surface); border-top: 1px solid var(--border); z-index: 50; }
+    .nav-btn { flex: 1; padding: 12px 8px; background: none; border: none; color: var(--text2); font-size: 11px; font-family: 'Noto Sans JP', sans-serif; cursor: pointer; display: flex; flex-direction: column; align-items: center; gap: 4px; transition: color 0.2s; }
+    .nav-btn .nav-icon { font-size: 22px; }
+    .nav-btn.active, .nav-btn:hover { color: var(--accent); }
+
+    .app-content { padding-bottom: 60px; }
+
+    .empty-state { text-align: center; padding: 48px 20px; color: var(--text2); }
+    .empty-state .emoji { font-size: 48px; margin-bottom: 12px; }
+    .empty-state p { font-size: 14px; }
+
+    .speech-no-support { background: rgba(255,71,87,0.1); border: 1px solid rgba(255,71,87,0.3); border-radius: var(--radius); padding: 12px 16px; font-size: 13px; color: var(--red); display: none; margin-bottom: 12px; }
+    .manual-input-area { display: none; }
+    .manual-input { width: 100%; background: var(--surface2); border: 2px solid var(--border); border-radius: var(--radius); padding: 14px 16px; font-size: 18px; color: var(--text); font-family: 'Noto Sans JP', sans-serif; outline: none; transition: border-color 0.2s; }
+    .manual-input:focus { border-color: var(--blue); }
+    .manual-input::placeholder { color: var(--text2); }
+    .hint-text { font-size: 12px; color: var(--text2); text-align: center; margin-top: 6px; }
+
+    .scanline-container { position: fixed; inset: 0; pointer-events: none; overflow: hidden; z-index: 999; opacity: 0.03; }
+    .scanline-container::before { content: ''; position: absolute; left: 0; right: 0; height: 200px; background: linear-gradient(transparent, rgba(255,255,255,0.8), transparent); animation: scanline 8s linear infinite; }
+
+    .divider { height: 1px; background: var(--border); margin: 0 20px; }
+    .page-section-title { padding: 20px 20px 12px; font-size: 11px; letter-spacing: 0.2em; color: var(--text2); text-transform: uppercase; }
+
+    /* ==================== 4択ボタン（タップしやすく改良） ==================== */
+    #choices-area {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    #choices-area button {
+      display: block;
+      width: 100%;
+      min-height: 60px;
+      padding: 16px 20px;
+      background: var(--surface);
+      border: 2px solid var(--border);
+      border-radius: var(--radius);
+      color: var(--text);
+      font-family: 'Noto Sans JP', sans-serif;
+      font-size: 17px;
+      font-weight: 700;
+      text-align: left;
+      cursor: pointer;
+      transition: all 0.15s ease;
+      line-height: 1.5;
+      letter-spacing: 0.03em;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    #choices-area button:hover {
+      background: var(--surface2);
+      border-color: var(--accent);
+      transform: translateX(4px);
+    }
+
+    #choices-area button:active {
+      transform: scale(0.97);
+      background: rgba(245,166,35,0.15);
+      border-color: var(--accent);
+    }
+
+  </style>
+  <script src="https://pecpec37-gift.github.io/portal/stamp.js"></script>
 </head>
 <body>
 
-<!-- TOP SCREEN -->
+<div class="scanline-container"></div>
+
+<!-- ==================== TOP SCREEN ==================== -->
 <div id="screen-top" class="screen active">
-  <div class="title-wrap">
-    <span class="title-icon">⚫</span>
-    <div class="title-main">囲碁クイズ道場</div>
-    <div class="title-sub">IGO QUIZ DOJO</div>
-  </div>
-  <div class="rules-box">
-    <div class="rules-title">📋 ルール</div>
-    <ul class="rules-list">
-      <li>制限時間：<strong>30秒</strong> ／ 各ジャンル <strong>10問</strong> ランダム出題</li>
-      <li>✅ 正解 → <strong>+10点</strong> ＋ 時間+5秒</li>
-      <li>❌ 不正解 → 減点なし ＋ 時間−5秒のペナルティ</li>
-      <li>🏆 残り時間がそのままボーナス点に加算！</li>
-      <li>【4択】と【○×】がランダムにミックスされます</li>
-    </ul>
-  </div>
-  <div class="genre-title">🎯 ジャンルを選んでスタート</div>
-  <div class="genre-hint">▼ カードをクリックすると即スタート ▼</div>
-  <div class="genre-grid" id="genre-grid"></div>
-  <button class="btn-ranking" onclick="showRanking()">🏆 スコアランキングを見る</button>
-  <a href="https://pecpec37-gift.github.io/portal/" class="portal-link">← Tommy-Go</a>
-</div>
-
-<!-- NAME SCREEN -->
-<div id="screen-name" class="screen">
-  <div class="name-box">
-    <h2>プレーヤー名を入力</h2>
-    <p>ランキングに記録されます</p>
-    <div class="selected-genre-label">ジャンル：<strong id="selected-genre-text"></strong></div>
-    <input type="text" class="name-input" id="player-name-input" placeholder="名前を入力..." maxlength="12">
-    <button class="btn-start" onclick="startGame()">スタート ▶</button>
-    <button class="btn-back" onclick="backToTop()">← 戻る</button>
-  </div>
-</div>
-
-<!-- GAME SCREEN -->
-<div id="screen-game" class="screen">
-  <div class="game-header">
-    <div class="q-counter">Q<span id="q-num">1</span> / 10</div>
-    <div class="score-display"><span id="score-val">0</span> pt</div>
-    <div class="timer-wrap">
-      <span class="timer-label">残り</span>
-      <span class="timer-value" id="timer-val">30</span>
-      <span class="timer-unit">秒</span>
+  <div class="app-content">
+    <div class="top-header">
+      <div class="dojo-emblem">🎯</div>
+      <h1 class="top-title">早押しクイズ道場</h1>
+      <p class="top-subtitle">HAYAOSHI QUIZ DOJO</p>
+      <div class="question-count">📚 <span id="total-q-count">0</span>問収録</div>
     </div>
-  </div>
-  <div class="progress-bar"><div class="progress-fill" id="progress-fill" style="width:0%"></div></div>
-  <span class="q-type-badge" id="q-type-badge">4択</span>
-  <div class="question-box"><div class="question-text" id="question-text"></div></div>
-  <div class="options-grid" id="options-grid"></div>
-  <div class="feedback-bar" id="feedback-bar"></div>
-  <button class="btn-next" id="btn-next" onclick="nextQuestion()">次の問題へ →</button>
-</div>
 
-<!-- RESULT SCREEN -->
-<div id="screen-result" class="screen">
-  <div class="result-box">
-    <div class="result-trophy">🏆</div>
-    <div class="result-total" id="result-total">0</div>
-    <div class="result-label">TOTAL SCORE</div>
-    <div class="result-stats">
-      <div class="stat-item"><div class="stat-num" id="res-correct">0</div><div class="stat-lbl">正解数</div></div>
-      <div class="stat-item"><div class="stat-num" id="res-wrong">0</div><div class="stat-lbl">不正解数</div></div>
-      <div class="stat-item"><div class="stat-num" id="res-bonus">+0</div><div class="stat-lbl">時間ボーナス</div></div>
-    </div>
-    <button class="btn-retry" onclick="retryGame()">もう一度挑戦</button>
-    <button class="btn-to-top" onclick="backToTop()">← トップへ</button>
-    <a href="https://pecpec37-gift.github.io/portal/" class="portal-link">← Tommy-Go</a>
-  </div>
-  <div class="wrong-review" id="wrong-review">
-    <div class="wrong-review-title">📖 間違えた問題の復習</div>
-    <div id="wrong-items-list"></div>
-  </div>
-</div>
-
-<!-- RANKING SCREEN -->
-<div id="screen-ranking" class="screen">
-  <div class="ranking-header"><h2>🏆 スコアランキング</h2></div>
-  <div class="ranking-genre-tabs" id="ranking-tabs"></div>
-  <div class="ranking-list" id="ranking-list"></div>
-  <button class="btn-to-top" onclick="backToTop()" style="max-width:500px;width:100%;margin-top:16px;">← トップへ</button>
-</div>
-
-<script>
-// ============================================================
-//  QUESTION DATA  (200問以上)
-// ============================================================
-const GENRES = [
-  { id: 'kihon',    name: '基本ルール',  icon: '📜' },
-  { id: 'rekishi',  name: '囲碁の歴史',  icon: '🏯' },
-  { id: 'senryaku', name: '戦略・戦術',  icon: '⚔️' },
-  { id: 'kifu',     name: '有名棋譜',    icon: '📋' },
-  { id: 'kishi',    name: '棋士・棋戦',  icon: '🎌' },
-  { id: 'yogo',     name: '用語・格言',  icon: '💬' },
-];
-
-const QUESTIONS = {
-  // ====== 基本ルール（40問） ======
-  kihon: [
-    {type:'4', q:'囲碁の盤面は何路盤が標準ですか？', choices:['13路盤','17路盤','19路盤','21路盤'], ans:2},
-    {type:'4', q:'黒石は何個ありますか？', choices:['170個','178個','181個','190個'], ans:2},
-    {type:'4', q:'白石は何個ありますか？', choices:['170個','176個','180個','182個'], ans:2},
-    {type:'4', q:'19路盤の交点の総数はいくつですか？', choices:['324','361','380','400'], ans:1},
-    {type:'4', q:'囲碁で「コウ」とは何ですか？', choices:['石を取る手','同じ局面の繰り返しを禁止するルール','境界線のこと','石を置けない場所'], ans:1},
-    {type:'4', q:'石が取られる条件は何ですか？', choices:['隣接する交点（呼吸点）がすべて埋まる','盤の端に置かれる','相手の石に囲まれる','3手以上経過する'], ans:0},
-    {type:'4', q:'囲碁の「目（め）」とは何ですか？', choices:['石の数','自分の石に完全に囲まれた空点','盤面の交点の数','相手の石を取った数'], ans:1},
-    {type:'4', q:'日本で主に使われる得点計算のルールはどれですか？', choices:['エリアスコアリング','テリトリースコアリング','アゲハマ計算','コミ計算'], ans:1},
-    {type:'4', q:'「コミ」とは何ですか？', choices:['白番のハンデ','黒の先手優位を補うため白に与えるポイント','石を取った時のボーナス','禁手の種類'], ans:1},
-    {type:'4', q:'現在の日本棋院ルールでのコミは何目ですか？', choices:['4目半','5目半','6目半','7目半'], ans:2},
-    {type:'4', q:'「ダメ」とは何ですか？', choices:['悪い手','どちらの地でもない無価値な空点','石を置けない場所','コウの一種'], ans:1},
-    {type:'4', q:'「セキ」とはどういう状態ですか？', choices:['両者の石が互いに取り合えない状態','石が完全に囲まれた状態','どちらかが勝つ状態','石が2目ある状態'], ans:0},
-    {type:'4', q:'「二眼（にがん）」とはどういう意味ですか？', choices:['石が2つある','2つの目を持ち生きが確定した石','2手目のこと','二番勝負のこと'], ans:1},
-    {type:'4', q:'9路盤は主に何に使われますか？', choices:['プロの本因坊戦','入門・練習用','アジア大会','コンピュータ研究'], ans:1},
-    {type:'4', q:'「手番」で黒と白はどちらが先に打ちますか？', choices:['白','黒','じゃんけんで決める','年長者'], ans:1},
-    {type:'4', q:'「アゲハマ」とは何ですか？', choices:['盤の縁','対局中に取った相手の石','コウのときに取る石','空点のこと'], ans:1},
-    {type:'4', q:'「呼吸点（ダメ）」とは何ですか？', choices:['石に隣接した空点','石の目','コウの石','終局後の空点'], ans:0},
-    {type:'4', q:'「投了（とうりょう）」とはどういう意味ですか？', choices:['石を投げる','負けを認めて対局を終了すること','コウに負ける','時間切れ'], ans:1},
-    {type:'4', q:'「終局」の条件は何ですか？', choices:['両者が連続してパスする','時間が切れる','100手打ったら終わり','石がなくなったら'], ans:0},
-    {type:'4', q:'囲碁で「地（じ）」とは何ですか？', choices:['石が多い場所','自分の石に完全に囲まれた空点の数','盤の中心','序盤の作戦'], ans:1},
-    {type:'ox', q:'囲碁では石を盤上の交点に置く。', ans:true},
-    {type:'ox', q:'囲碁では石をマス目の中に置く。', ans:false},
-    {type:'ox', q:'囲碁の盤は縦横同じ数の線が引かれている。', ans:true},
-    {type:'ox', q:'囲碁で「パス」はルール上できない。', ans:false},
-    {type:'ox', q:'石を取るとき、相手の石が全方向（上下左右）を塞がれると取られる。', ans:true},
-    {type:'ox', q:'囲碁で斜め方向に隣接した石は連絡（つながり）している。', ans:false},
-    {type:'ox', q:'黒番が先手でコミなしの場合、黒が有利とされる。', ans:true},
-    {type:'ox', q:'「コウ」の状態では直前に取られた場所にすぐ打てる。', ans:false},
-    {type:'ox', q:'終局後、アゲハマは相手の地に入れて計算する（日本ルール）。', ans:true},
-    {type:'ox', q:'19路盤の交点の数は361ある。', ans:true},
-    {type:'ox', q:'「二眼」を持つ石は死ぬことがない。', ans:true},
-    {type:'ox', q:'「セキ」の石は最終的に生きと数えられる。', ans:true},
-    {type:'ox', q:'黒石の数は白石よりも1個多い。', ans:true},
-    {type:'ox', q:'13路盤は19路盤と同じルールで打てる。', ans:true},
-    {type:'ox', q:'コミは白番に与えるマイナスポイントだ。', ans:false},
-    {type:'ox', q:'「ダメ」は終局時に最後まで打つ必要がある。', ans:false},
-    {type:'ox', q:'囲碁では石を盤上で動かすことができる。', ans:false},
-    {type:'ox', q:'「呼吸点が1つだけの状態」を「アタリ」という。', ans:true},
-    {type:'ox', q:'「一眼」しか持たない石は死んでいる。', ans:true},
-    {type:'ox', q:'プロの対局では19路盤が使われる。', ans:true},
-  ],
-
-  // ====== 囲碁の歴史（40問） ======
-  rekishi: [
-    {type:'4', q:'囲碁の発祥の地はどこですか？', choices:['日本','韓国','中国','インド'], ans:2},
-    {type:'4', q:'本因坊戦は何年に始まりましたか？', choices:['1935年','1939年','1945年','1950年'], ans:1},
-    {type:'4', q:'江戸時代の四大家元に含まれないものはどれですか？', choices:['本因坊家','安井家','林家','加藤家'], ans:3},
-    {type:'4', q:'「囲碁の神様」と称された江戸時代の棋士は誰ですか？', choices:['本因坊秀策','本因坊道策','本因坊秀和','本因坊丈和'], ans:0},
-    {type:'4', q:'本因坊秀策の得意戦法として知られる布石は何ですか？', choices:['三連星','秀策流','中国流','ミニ中国流'], ans:1},
-    {type:'4', q:'囲碁が日本に伝わったのは何世紀頃とされますか？', choices:['3世紀','5〜6世紀','8世紀','10世紀'], ans:1},
-    {type:'4', q:'最も高い地位にあった江戸時代の家元はどれですか？', choices:['安井家','林家','本因坊家','井上家'], ans:2},
-    {type:'4', q:'「御城碁」とはどのような対局ですか？', choices:['賞金がかかった対局','江戸城での将軍上覧の対局','海外で行われた対局','盲目の棋士が行う対局'], ans:1},
-    {type:'4', q:'1938年の「新布石革命」の中心にいた棋士は誰ですか？', choices:['呉清源と木谷実','本因坊秀策と道策','趙治勲と林海峰','加藤正夫と武宮正樹'], ans:0},
-    {type:'4', q:'AlphaGoを開発した企業はどこですか？', choices:['Google','DeepMind','Meta','OpenAI'], ans:1},
-    {type:'4', q:'AlphaGoがイ・セドルに歴史的勝利を収めた年はいつですか？', choices:['2013年','2016年','2018年','2020年'], ans:1},
-    {type:'4', q:'韓国の囲碁が世界的に台頭したきっかけとなった棋士は誰ですか？', choices:['趙治勲','李昌鎬','曺薫鉉','朴廷桓'], ans:2},
-    {type:'4', q:'日本で囲碁の家元制度が確立されたのはいつ頃ですか？', choices:['奈良時代','平安時代','江戸時代','明治時代'], ans:2},
-    {type:'4', q:'呉清源と木谷実の「新布石」が注目された理由は何ですか？', choices:['初めて女性が打った','星と高目を積極的に使う革新的布石','コンピュータで発見された','海外で開発された'], ans:1},
-    {type:'4', q:'「碁聖」の称号は誰に贈られますか？', choices:['囲碁の大会優勝者','本因坊秀策','本因坊道策','最高位の棋士全員'], ans:1},
-    {type:'4', q:'日本棋院が設立されたのは何年ですか？', choices:['1905年','1924年','1935年','1950年'], ans:1},
-    {type:'4', q:'囲碁の古典「棋経十三篇」はどこの国で書かれましたか？', choices:['日本','韓国','中国','ベトナム'], ans:2},
-    {type:'4', q:'「御城碁」が廃止されたのはいつですか？', choices:['江戸幕府崩壊（1868年）頃','明治20年代','大正時代','昭和初期'], ans:0},
-    {type:'4', q:'囲碁の世界最強決定戦「応氏杯」はどこの主催ですか？', choices:['日本','韓国','台湾（中国応氏棋院）','アメリカ'], ans:2},
-    {type:'4', q:'平安時代に囲碁を楽しんだとされる文豪は誰ですか？', choices:['紫式部','清少納言','藤原道長','光源氏（架空）'], ans:2},
-    {type:'ox', q:'本因坊秀策は無敗の御城碁連勝記録を持つ。', ans:true},
-    {type:'ox', q:'囲碁の発祥は日本とされている。', ans:false},
-    {type:'ox', q:'AlphaGoはイ・セドルとの対局で5戦全勝した。', ans:false},
-    {type:'ox', q:'江戸時代、幕府は囲碁の家元に俸禄を与えた。', ans:true},
-    {type:'ox', q:'本因坊という名は現在も棋戦名として使われている。', ans:true},
-    {type:'ox', q:'囲碁は古代中国で帝王が息子の教育に使ったとされる。', ans:true},
-    {type:'ox', q:'呉清源は日本棋院に所属した中国出身の棋士だ。', ans:true},
-    {type:'ox', q:'李世乭（イ・セドル）はAlphaGoに1勝もできなかった。', ans:false},
-    {type:'ox', q:'囲碁は2000年以上の歴史を持つとされている。', ans:true},
-    {type:'ox', q:'本因坊秀策は明治時代の棋士だ。', ans:false},
-    {type:'ox', q:'「新布石」は昭和初期（1930年代）に登場した。', ans:true},
-    {type:'ox', q:'呉清源は10番碁で全ての日本トップ棋士を打ち込んだ。', ans:true},
-    {type:'ox', q:'江戸時代の四大家元はすべて囲碁の家元だった。', ans:true},
-    {type:'ox', q:'「御城碁」は毎年元旦に行われた。', ans:false},
-    {type:'ox', q:'AlphaGoの後継はAlphaGo Zeroと呼ばれる。', ans:true},
-    {type:'ox', q:'囲碁は古代オリンピックで競技として行われた。', ans:false},
-    {type:'ox', q:'日本棋院は東京に本部を置く。', ans:true},
-    {type:'ox', q:'本因坊道策は江戸時代最強の棋士の一人とされる。', ans:true},
-    {type:'ox', q:'囲碁の世界大会「LG杯」は中国が主催する。', ans:false},
-    {type:'ox', q:'「囲碁十訣」は中国の棋士・王積薪が著したとされる。', ans:true},
-  ],
-
-  // ====== 戦略・戦術（40問） ======
-  senryaku: [
-    {type:'4', q:'「布石」とは何ですか？', choices:['序盤の石の配置計画','中盤の攻撃手','終盤の石の計算','取り合いのルール'], ans:0},
-    {type:'4', q:'「三連星」の布石とはどのような配置ですか？', choices:['3つの石を直線状に星点に置く','小目に3つ置く','天元を中心に3つ置く','隅に3つ置く'], ans:0},
-    {type:'4', q:'「シマリ」とはどういう手ですか？', choices:['相手の石を囲む手','隅に置いた石を守る手','中央へ向かう手','石を取る手'], ans:1},
-    {type:'4', q:'「カカリ」とはどういう手ですか？', choices:['相手の隅の石に接近する手','自分の石を守る手','石を取る手','地を広げる手'], ans:0},
-    {type:'4', q:'「ツケ」とはどういう手ですか？', choices:['石を盤外に置く','相手の石に直接隣接して打つ手','石を取る手','序盤の布石'], ans:1},
-    {type:'4', q:'「ヨセ」とは何のフェーズですか？', choices:['序盤','中盤','終盤で境界を確定する段階','コウの処理'], ans:2},
-    {type:'4', q:'「切り」とはどういう手ですか？', choices:['相手の2つの石のつながりを断つ手','石を盤の外に出す','地を増やす手','守りの手'], ans:0},
-    {type:'4', q:'「根拠」とは囲碁でどういう意味ですか？', choices:['歴史的な布石','石が生きるための目や逃げ道','攻撃の基点','終局後の地の数'], ans:1},
-    {type:'4', q:'「厚み」とはどういう意味ですか？', choices:['石が多い','外勢や将来価値の高い強固な形','地が多い','石が密集している'], ans:1},
-    {type:'4', q:'「サバキ」とは何ですか？', choices:['石を全部取ること','苦しい局面で軽く捌いて活路を開く手','地を囲う手','定石の一種'], ans:1},
-    {type:'4', q:'「死活」とは何の問題ですか？', choices:['石が生きるか死ぬかの問題','布石の問題','ヨセの問題','終盤計算'], ans:0},
-    {type:'4', q:'「定石」とは何ですか？', choices:['決められた手順の模範','悪手','初心者向けの手','終盤の打ち方'], ans:0},
-    {type:'4', q:'「手割り」とはどういう概念ですか？', choices:['石を分割する','複数の石交換の効率を比較分析すること','盤を4分割する','石を取った数を分ける'], ans:1},
-    {type:'4', q:'「大場（おおば）」とは何ですか？', choices:['大きい盤','局面で価値の高い場所','大きな石の集まり','大きな戦い'], ans:1},
-    {type:'4', q:'「急場（きゅうば）」と「大場」、どちらを優先すべきですか？', choices:['大場','急場','同じ','状況による'], ans:1},
-    {type:'4', q:'「ナダレ定石」はどの部分の定石ですか？', choices:['中央','隅','辺','天元'], ans:1},
-    {type:'4', q:'「中国流」布石の特徴はどれですか？', choices:['隅だけに石を置く','辺の星点と小目を組み合わせた布石','天元を使う布石','全て星点に置く'], ans:1},
-    {type:'4', q:'「宇宙流」と呼ばれる独特の布石を得意とした棋士は誰ですか？', choices:['趙治勲','武宮正樹','林海峰','加藤正夫'], ans:1},
-    {type:'4', q:'「ゲタ」とはどういう技ですか？', choices:['石を守る','相手の石を逃げられなくする捕獲の形','地を囲む','石を飛ばす'], ans:1},
-    {type:'4', q:'「振り替わり」とは何ですか？', choices:['戦法を変える','石と地を交換して互いに利益を得る手筋','石を振って打つ','コウの一種'], ans:1},
-    {type:'ox', q:'「定石」はプロ・アマ問わず最善手の応酬として研究された手順だ。', ans:true},
-    {type:'ox', q:'「厚み」は常に地の多さと等しい。', ans:false},
-    {type:'ox', q:'「コスミ」は斜め一間に打つ手だ。', ans:true},
-    {type:'ox', q:'「ノビ」は直接隣に打つ手だ。', ans:true},
-    {type:'ox', q:'「一間トビ」は2路離れたところに打つ手だ。', ans:false},
-    {type:'ox', q:'「大場」より「急場」を先に打つべきだ。', ans:true},
-    {type:'ox', q:'「ヨセ」は序盤の戦略を指す言葉だ。', ans:false},
-    {type:'ox', q:'「アテ」は相手の石の呼吸点（ダメ）を直接ふさぐ手だ。', ans:true},
-    {type:'ox', q:'「先手ヨセ」は「後手ヨセ」より価値が高い。', ans:true},
-    {type:'ox', q:'「テヌキ」は常に悪手だ。', ans:false},
-    {type:'ox', q:'「死活問題」を解くことは囲碁の強さに直結する。', ans:true},
-    {type:'ox', q:'囲碁の石は相手の石を囲むと取ることができる。', ans:true},
-    {type:'ox', q:'「サバキ」は重い石を救うための手段だ。', ans:false},
-    {type:'ox', q:'「二間トビ」より「一間トビ」の方が石のつながりが強い。', ans:true},
-    {type:'ox', q:'「三連星」は1960年代以降に広まった比較的新しい布石だ。', ans:true},
-    {type:'ox', q:'「中国流」は相手の動きに応じて柔軟に形を変えられる布石だ。', ans:true},
-    {type:'ox', q:'「曲り四目」は必ず死ぬ形だ。', ans:true},
-    {type:'ox', q:'「ダメヅマリ」は自分に不利になる状況だ。', ans:true},
-    {type:'ox', q:'「二眼」があれば、どんな状況でも石は取られない。', ans:true},
-    {type:'ox', q:'「コウ」の争いでは、コウダテを多く持つ側が有利だ。', ans:true},
-  ],
-
-  // ====== 有名棋譜（35問） ======
-  kifu: [
-    {type:'4', q:'AlphaGoが「神の一手」と称された第2局の一手は何手目の手ですか？', choices:['29手目','37手目','78手目','100手目'], ans:1},
-    {type:'4', q:'本因坊秀策の「秀策流」布石の特徴は何ですか？', choices:['全て星点を打つ','小目からのシマリを重視する','三連星を多用する','天元から打ち始める'], ans:1},
-    {type:'4', q:'呉清源が日本トップ棋士全員と打った対局シリーズを何と言いますか？', choices:['五番碁','七番碁','十番碁','二十番碁'], ans:2},
-    {type:'4', q:'AlphaGoはイ・セドルとの5番勝負で何勝しましたか？', choices:['3勝','4勝','5勝','2勝'], ans:1},
-    {type:'4', q:'AlphaGoのマスターバージョンはオンラインで人間棋士に何連勝しましたか？', choices:['30連勝','60連勝','70連勝','100連勝'], ans:1},
-    {type:'4', q:'柯潔（カ・ケツ）がAlphaGoと対局した年はいつですか？', choices:['2016年','2017年','2018年','2019年'], ans:1},
-    {type:'4', q:'「秀策の耳赤の一手」として知られる対局の対戦相手は誰ですか？', choices:['本因坊知得','本因坊秀和','本因坊丈和','本因坊道策'], ans:0},
-    {type:'4', q:'囲碁の「名局」として有名な「血涙の碁」は誰と誰の対局ですか？', choices:['秀策vs知得','道策vs道悦','秀和vs秀策','丈和vs丈和'], ans:0},
-    {type:'4', q:'AlphaGoがイ・セドルとの第4局で負けた際、イ・セドルの決め手は何手目でしたか？', choices:['62手目','78手目','92手目','105手目'], ans:1},
-    {type:'4', q:'「三三」とは何を指しますか？', choices:['石が3個','3の3の交点（隅の低い場所）','三連星のこと','3回のコウ'], ans:1},
-    {type:'4', q:'「本因坊秀策流」では黒の何手目から独特の手が始まりますか？', choices:['1手目','3手目','5手目','7手目'], ans:1},
-    {type:'4', q:'柯潔はAlphaGoとの3番勝負で何勝しましたか？', choices:['0勝','1勝','2勝','3勝'], ans:0},
-    {type:'4', q:'「御城碁」で本因坊秀策は何連勝しましたか？', choices:['10連勝','19連勝','24連勝','37連勝'], ans:1},
-    {type:'4', q:'「棋聖・道策」が活躍した時代はいつですか？', choices:['戦国時代','江戸時代前期','江戸時代中期','明治時代'], ans:1},
-    {type:'4', q:'囲碁AIの「Leela Zero」はどのような特徴を持ちますか？', choices:['Googleが開発した','オープンソースで誰でも参加できる学習プロジェクト','日本棋院が開発した','韓国棋院が主導した'], ans:1},
-    {type:'ox', q:'AlphaGoはイ・セドルとの5番勝負で4勝1敗だった。', ans:true},
-    {type:'ox', q:'「秀策流」は現代でも通用する布石として研究されている。', ans:true},
-    {type:'ox', q:'柯潔はAlphaGoとの対局で1勝もできなかった。', ans:true},
-    {type:'ox', q:'AIの強さは2016年以降、人間のトップ棋士を上回るとされる。', ans:true},
-    {type:'ox', q:'「耳赤の一手」を見た相手棋士は顔が赤くなったと伝えられる。', ans:true},
-    {type:'ox', q:'本因坊秀策は御城碁で一度も負けなかった。', ans:true},
-    {type:'ox', q:'AlphaGoは人間の棋譜を一切使わずに学習したバージョンをAlphaGo Zeroという。', ans:true},
-    {type:'ox', q:'呉清源の十番碁では呉清源が全敗した。', ans:false},
-    {type:'ox', q:'AIが囲碁でプロに初めて勝ったのはチェスより後のことだ。', ans:true},
-    {type:'ox', q:'「棋聖道策」は負けなしで引退したとされる。', ans:false},
-    {type:'ox', q:'Leela Zeroは非営利のオープンソースプロジェクトだ。', ans:true},
-    {type:'ox', q:'AlphaGoは第1局から第5局まで全て終局まで打った。', ans:false},
-    {type:'ox', q:'「三三」への打ち込みは現代では有力な戦法の一つとされる。', ans:true},
-    {type:'ox', q:'「宇宙流」（武宮正樹）は中央を重視する布石だ。', ans:true},
-    {type:'ox', q:'AIの登場後、人間の棋士の棋力は全体的に下がった。', ans:false},
-    {type:'ox', q:'「AlphaGo Master」はプロ棋士に1敗もしなかった。', ans:true},
-    {type:'ox', q:'本因坊道策は生涯最高峰と称される江戸時代の棋士だ。', ans:true},
-    {type:'ox', q:'柯潔はAlphaGoとの対局後、涙を流したと報道された。', ans:true},
-    {type:'ox', q:'「秀策流」は左右非対称の布石だ。', ans:true},
-    {type:'ox', q:'AlphaGoを破ったイ・セドルの78手目は「神の一手」と呼ばれた。', ans:true},
-  ],
-
-  // ====== 棋士・棋戦（40問） ======
-  kishi: [
-    {type:'4', q:'囲碁の最高段位は何段ですか？', choices:['8段','9段','10段','無段'], ans:1},
-    {type:'4', q:'日本囲碁の「七大タイトル」に含まれないものはどれですか？', choices:['名人','棋聖','本因坊','皇位'], ans:3},
-    {type:'4', q:'「趙治勲」の出身国はどこですか？', choices:['日本','韓国','中国','台湾'], ans:1},
-    {type:'4', q:'日本棋院が設立されたのは何年ですか？', choices:['1905年','1924年','1935年','1950年'], ans:1},
-    {type:'4', q:'仲邑菫が入段した年齢は何歳ですか？', choices:['9歳','10歳','11歳','12歳'], ans:1},
-    {type:'4', q:'日本の女流囲碁で多くのタイトルを持つ棋士は誰ですか？（2020年代）', choices:['小林泉美','謝依旻','万波奈穂','鈴木歩'], ans:1},
-    {type:'4', q:'「棋聖戦」の主催新聞社はどこですか？', choices:['読売新聞','朝日新聞','日経新聞','産経新聞'], ans:0},
-    {type:'4', q:'本因坊戦の主催はどこですか？', choices:['毎日新聞','朝日新聞','読売新聞','日本棋院'], ans:0},
-    {type:'4', q:'「名人戦」の主催はどこですか？', choices:['読売新聞','朝日新聞','毎日新聞','日経新聞'], ans:1},
-    {type:'4', q:'世界最大級の囲碁の大会「LG杯」はどこの主催ですか？', choices:['日本','中国','韓国','台湾'], ans:2},
-    {type:'4', q:'「宇宙流」の布石で知られる棋士は誰ですか？', choices:['趙治勲','武宮正樹','林海峰','加藤正夫'], ans:1},
-    {type:'4', q:'韓国の囲碁プロ組織は何ですか？', choices:['韓国棋院','囲棋協会','高麗棋院','ソウル囲碁センター'], ans:0},
-    {type:'4', q:'趙治勲が最も多く獲得したタイトルはどれですか？', choices:['名人','本因坊','棋聖','天元'], ans:1},
-    {type:'4', q:'中国の若手棋士で「AI後の最強人類」と称された棋士は誰ですか？', choices:['常昊','柯潔','謝爾豪','仲邑信也'], ans:1},
-    {type:'4', q:'「囲棋十訣」を著したとされる中国の棋士は誰ですか？', choices:['王積薪','柯潔','謝赫','常昊'], ans:0},
-    {type:'4', q:'日本の三大棋戦（名人・棋聖・本因坊）のうち、最も賞金が高いとされるのはどれですか？', choices:['名人','棋聖','本因坊','すべて同じ'], ans:1},
-    {type:'4', q:'囲碁の「アマ最強」を決める大会は何ですか？', choices:['全日本アマ囲碁選手権','囲碁アマ名人戦','日本アマ囲碁棋聖戦','全国囲碁大会'], ans:0},
-    {type:'4', q:'韓国の「応氏杯」で最多優勝している国はどこですか？', choices:['日本','韓国','中国','台湾'], ans:1},
-    {type:'4', q:'「本因坊」タイトルの現在の選考方式はどれですか？', choices:['世襲制','リーグ戦＋番勝負','トーナメント','推薦制'], ans:1},
-    {type:'4', q:'「囲碁の殿堂」と称される世界最大級の囲碁会館はどこにありますか？', choices:['東京','北京','ソウル','上海'], ans:1},
-    {type:'ox', q:'囲碁のプロ棋士は日本棋院または関西棋院に所属する。', ans:true},
-    {type:'ox', q:'趙治勲は韓国出身で日本棋院所属の棋士だ。', ans:true},
-    {type:'ox', q:'女流棋士は男性棋士と同じ棋戦に出場できない。', ans:false},
-    {type:'ox', q:'「本因坊」は世襲制のタイトルだったが現在はリーグ戦で決まる。', ans:true},
-    {type:'ox', q:'仲邑菫は日本人史上最年少でプロ入りした棋士だ。', ans:true},
-    {type:'ox', q:'囲碁の9段は最高段位だ。', ans:true},
-    {type:'ox', q:'関西棋院は大阪に本部を置く。', ans:true},
-    {type:'ox', q:'「棋聖戦」は朝日新聞が主催する。', ans:false},
-    {type:'ox', q:'謝依旻（シェ・イミン）は台湾出身の日本棋院所属の女流棋士だ。', ans:true},
-    {type:'ox', q:'囲碁の世界3大棋戦とは、LG杯・応氏杯・農心辛ラーメン杯とされることがある。', ans:false},
-    {type:'ox', q:'「天元」はタイトルの一つでもあり、盤の中心点の名称でもある。', ans:true},
-    {type:'ox', q:'プロ棋士試験は毎年行われており、合格すれば初段となる。', ans:true},
-    {type:'ox', q:'女流棋士にも9段が存在する。', ans:true},
-    {type:'ox', q:'趙治勲は本因坊タイトルを10期以上獲得した。', ans:true},
-    {type:'ox', q:'「名誉称号」は現役のうちは使用できない。', ans:false},
-    {type:'ox', q:'囲碁の段位は数字が大きいほど強い。', ans:true},
-    {type:'ox', q:'世界棋戦は日本が最も多くのタイトルを保有している。', ans:false},
-    {type:'ox', q:'武宮正樹は「宇宙流」と呼ばれる中央志向の棋風で知られる。', ans:true},
-    {type:'ox', q:'林海峰は台湾出身の棋士で、日本で活躍した。', ans:true},
-    {type:'ox', q:'「七冠」を達成した日本の棋士が存在する。', ans:false},
-  ],
-
-  // ====== 用語・格言（40問） ======
-  yogo: [
-    {type:'4', q:'「囲碁十訣」の第一条は何ですか？', choices:['攻彼顧我','不得貪勝','入界宜緩','棄子争先'], ans:1},
-    {type:'4', q:'「テヌキ」とは何ですか？', choices:['石を盤から抜く','その場に打たずに他の場所へ打つこと','石を取ること','パスをすること'], ans:1},
-    {type:'4', q:'「アジ」とは囲碁でどういう意味ですか？', choices:['不快な手','将来に活用できる利用価値・含み','石の形','終盤の計算'], ans:1},
-    {type:'4', q:'「テンプ」とはどういう意味ですか？', choices:['天元の点','先手を維持して相手に応手を強いる手','守りの手','ヨセの計算'], ans:1},
-    {type:'4', q:'「ハマ」とは何ですか？', choices:['盤の端','取った石（アゲハマ）','コウの石','地の境界'], ans:1},
-    {type:'4', q:'「曲り四目（まがりしもく）」とはどういう状態ですか？', choices:['4つの石が曲がって並ぶ','ダメが詰まると取られる死の形','コウに関する形','セキの一種'], ans:1},
-    {type:'4', q:'「一路（いちろ）」とは何ですか？', choices:['一番目の手','盤の端の列','1目の地','1つの石'], ans:1},
-    {type:'4', q:'「センテ（先手）」の反対はどれですか？', choices:['ゴテ（後手）','テヌキ','パス','コウ'], ans:0},
-    {type:'4', q:'「免状（めんじょう）」とは何ですか？', choices:['プロの段位証明書','アマチュアに与えられる段位や級の認定証','囲碁の規則集','棋譜の記録'], ans:1},
-    {type:'4', q:'「石の下」とはどういう手筋ですか？', choices:['盤の下に石を置く','取られた石の下に自分の石を作る奇手','石を下に動かす','地下に石を置く'], ans:1},
-    {type:'4', q:'「眼形（がんけい）」とは何ですか？', choices:['石の目の形','目を作るための形の総称','弱い石の形','攻撃の形'], ans:1},
-    {type:'4', q:'「花見コウ」とは何ですか？', choices:['美しい対局','一方がコウに勝っても得にならない不均衡なコウ','花形の石の配置','コウの格言'], ans:1},
-    {type:'4', q:'「棋譜（きふ）」とは何ですか？', choices:['囲碁のルールブック','対局の手順を記録したもの','棋士の名鑑','囲碁の格言集'], ans:1},
-    {type:'4', q:'「布石（ふせき）」の主な目的はどれですか？', choices:['相手を攻める','序盤に有利な陣形を作る','石を取る','コウを起こす'], ans:1},
-    {type:'4', q:'「ダメヅマリ」とはどういう状態ですか？', choices:['ダメが余っている状態','ダメが詰まって自分の石が危険になる状態','相手のダメを取る手','ダメの数を数えること'], ans:1},
-    {type:'4', q:'「勝着（しょうちゃく）」とは何ですか？', choices:['最後の一手','勝利を決定づけた手','初手のこと','ヨセの最後の手'], ans:1},
-    {type:'4', q:'「打ちかけ（うちかけ）」とは何ですか？', choices:['石を打って返す','対局を中断して後日再開すること','コウを打つこと','石を打ちかける手'], ans:1},
-    {type:'4', q:'「解説（かいせつ）」で使う「形勢（けいせい）」とは何ですか？', choices:['石の形','どちらが優勢かの評価','布石の名称','戦術の名前'], ans:1},
-    {type:'4', q:'「握り（にぎり）」とは何ですか？', choices:['石を強く打つこと','対局の先後を決めるじゃんけんのような方法','石を握って記録する','禁手のひとつ'], ans:1},
-    {type:'4', q:'「コウダテ」とは何ですか？', choices:['コウを取る手','コウの争いで相手に対応を強いる手','コウを解消する手','コウの種類'], ans:1},
-    {type:'ox', q:'「アタリ」は石があと1手で取られる状態を指す。', ans:true},
-    {type:'ox', q:'「コスミ」と「ケイマ」は同じ手だ。', ans:false},
-    {type:'ox', q:'「虎口（こぐち）」に打ち込むと石を取られやすい。', ans:true},
-    {type:'ox', q:'「花見コウ」は両者に不均衡な状況を指す。', ans:true},
-    {type:'ox', q:'「両コウ」は永遠に解消されないコウのことだ。', ans:true},
-    {type:'ox', q:'「棋譜」は左上から右下へ番号が付く。', ans:false},
-    {type:'ox', q:'「ダメヅマリ」は自分に不利になる状況だ。', ans:true},
-    {type:'ox', q:'「握り」では黒石を握った人が先手（黒番）になる。', ans:false},
-    {type:'ox', q:'「コウダテ」を多く持つ側がコウの争いで有利だ。', ans:true},
-    {type:'ox', q:'「先手ヨセ」は「後手ヨセ」の2倍の価値があるとされる。', ans:true},
-    {type:'ox', q:'「目外し（もくはずし）」は小目の1路外側の着点だ。', ans:true},
-    {type:'ox', q:'「高目（たかもく）」は小目より1路高い着点だ。', ans:true},
-    {type:'ox', q:'「星（ほし）」は天元を指す。', ans:false},
-    {type:'ox', q:'「地（じ）」は多いほど得点が高くなる。', ans:true},
-    {type:'ox', q:'「不得貪勝（むさぼって勝とうとするな）」は囲碁十訣の一つだ。', ans:true},
-    {type:'ox', q:'「棋譜」を並べることは囲碁の上達法の一つだ。', ans:true},
-    {type:'ox', q:'「勝着」は必ずしも終盤に打たれるわけではない。', ans:true},
-    {type:'ox', q:'「打ちかけ」は現代のプロ対局でもよく使われる。', ans:false},
-    {type:'ox', q:'「天元」は盤の中央交点のことだ。', ans:true},
-    {type:'ox', q:'「段位」の数字が小さいほど強い。', ans:false},
-  ],
-};
-
-// ============================================================
-//  GAME STATE
-// ============================================================
-let currentGenre = null;
-let currentPlayer = '';
-let questions = [];
-let qIndex = 0;
-let score = 0;
-let correctCount = 0;
-let wrongCount = 0;
-let timeLeft = 30;
-let timer = null;
-let answered = false;
-let wrongAnswers = [];
-
-// ============================================================
-//  INIT
-// ============================================================
-function init() {
-  buildGenreGrid();
-  buildRankingTabs();
-}
-
-function buildGenreGrid() {
-  const grid = document.getElementById('genre-grid');
-  grid.innerHTML = '';
-  GENRES.forEach(g => {
-    const qCount = QUESTIONS[g.id].length;
-    const card = document.createElement('div');
-    card.className = 'genre-card';
-    card.innerHTML = `
-      <span class="genre-icon">${g.icon}</span>
-      <div class="genre-name">${g.name}</div>
-      <div class="genre-count">問題数 ${qCount}問</div>
-      <div class="genre-badge">クリックでスタート</div>
-    `;
-    card.onclick = () => selectGenre(g.id);
-    grid.appendChild(card);
-  });
-}
-
-// ============================================================
-//  FLOW
-// ============================================================
-function selectGenre(genreId) {
-  currentGenre = genreId;
-  const g = GENRES.find(x => x.id === genreId);
-  document.getElementById('selected-genre-text').textContent = g.icon + ' ' + g.name;
-  const savedName = localStorage.getItem('igo_player_name') || '';
-  document.getElementById('player-name-input').value = savedName;
-  showScreen('screen-name');
-}
-
-function startGame() {
-  const nameInput = document.getElementById('player-name-input').value.trim();
-  currentPlayer = nameInput || 'ゲスト';
-  localStorage.setItem('igo_player_name', currentPlayer);
-
-  const pool = [...QUESTIONS[currentGenre]];
-  questions = shuffle(pool).slice(0, 10);
-  qIndex = 0; score = 0; correctCount = 0; wrongCount = 0;
-  timeLeft = 30; wrongAnswers = [];
-
-  showScreen('screen-game');
-  renderQuestion();
-  startTimer();
-}
-
-function shuffle(arr) {
-  const a = [...arr];
-  for (let i = a.length - 1; i > 0; i--) {
-    const j = Math.floor(Math.random() * (i + 1));
-    [a[i], a[j]] = [a[j], a[i]];
-  }
-  return a;
-}
-
-// ============================================================
-//  TIMER
-// ============================================================
-function startTimer() {
-  clearInterval(timer);
-  updateTimerDisplay();
-  timer = setInterval(() => {
-    timeLeft--;
-    updateTimerDisplay();
-    if (timeLeft <= 0) { clearInterval(timer); timeLeft = 0; updateTimerDisplay(); endGame(); }
-  }, 1000);
-}
-
-function updateTimerDisplay() {
-  const el = document.getElementById('timer-val');
-  el.textContent = timeLeft;
-  el.className = 'timer-value' + (timeLeft <= 10 ? ' danger' : '');
-}
-
-function addTime(sec) {
-  timeLeft = Math.max(0, timeLeft + sec);
-  updateTimerDisplay();
-}
-
-// ============================================================
-//  QUESTION
-// ============================================================
-function renderQuestion() {
-  const q = questions[qIndex];
-  answered = false;
-  document.getElementById('q-num').textContent = qIndex + 1;
-  document.getElementById('score-val').textContent = score;
-  document.getElementById('progress-fill').style.width = ((qIndex / 10) * 100) + '%';
-
-  const badge = document.getElementById('q-type-badge');
-  badge.textContent = q.type === '4' ? '4択' : '○×';
-  badge.className = 'q-type-badge ' + (q.type === '4' ? 'four' : 'ox');
-
-  document.getElementById('question-text').textContent = q.q;
-
-  const grid = document.getElementById('options-grid');
-  grid.innerHTML = '';
-
-  if (q.type === '4') {
-    grid.className = 'options-grid four-choice';
-    q.choices.forEach((c, i) => {
-      const btn = document.createElement('button');
-      btn.className = 'option-btn';
-      btn.textContent = ['A','B','C','D'][i] + '．' + c;
-      btn.onclick = () => answer(i);
-      grid.appendChild(btn);
-    });
-  } else {
-    grid.className = 'options-grid ox-choice';
-    ['⭕', '❌'].forEach((sym, i) => {
-      const btn = document.createElement('button');
-      btn.className = 'option-btn ox-btn';
-      btn.textContent = sym;
-      btn.onclick = () => answer(i === 0);
-      grid.appendChild(btn);
-    });
-  }
-
-  const fb = document.getElementById('feedback-bar');
-  fb.className = 'feedback-bar';
-  document.getElementById('btn-next').className = 'btn-next';
-}
-
-function answer(chosen) {
-  if (answered) return;
-  answered = true;
-
-  const q = questions[qIndex];
-  let isCorrect, correctLabel;
-
-  if (q.type === '4') {
-    isCorrect = chosen === q.ans;
-    correctLabel = q.choices[q.ans];
-  } else {
-    isCorrect = chosen === q.ans;
-    correctLabel = q.ans ? '⭕（正しい）' : '❌（誤り）';
-  }
-
-  const btns = document.querySelectorAll('.option-btn');
-  btns.forEach(b => b.disabled = true);
-
-  if (q.type === '4') {
-    btns[q.ans].classList.add('correct');
-    if (!isCorrect) btns[chosen].classList.add('wrong');
-  } else {
-    const correctBtnIdx = q.ans ? 0 : 1;
-    btns[correctBtnIdx].classList.add('correct');
-    if (!isCorrect) btns[q.ans ? 1 : 0].classList.add('wrong');
-  }
-
-  const fb = document.getElementById('feedback-bar');
-  if (isCorrect) {
-    score += 10; correctCount++; addTime(5);
-    fb.textContent = '✅ 正解！ ＋5秒';
-    fb.className = 'feedback-bar correct show';
-  } else {
-    wrongCount++; addTime(-5);
-    fb.textContent = `❌ 正解は「${correctLabel}」（−5秒）`;
-    fb.className = 'feedback-bar wrong show';
-    wrongAnswers.push({
-      q: q.q,
-      your: q.type === '4' ? q.choices[chosen] : (chosen ? '⭕' : '❌'),
-      correct: correctLabel
-    });
-  }
-
-  document.getElementById('score-val').textContent = score;
-  document.getElementById('btn-next').className = 'btn-next show';
-}
-
-function nextQuestion() {
-  qIndex++;
-  if (qIndex >= 10) endGame();
-  else renderQuestion();
-}
-
-// ============================================================
-//  END GAME
-// ============================================================
-function endGame() {
-  clearInterval(timer);
-  const bonus = Math.max(0, timeLeft);
-  const total = score + bonus;
-
-  saveRanking(currentGenre, currentPlayer, total, correctCount, wrongCount);
-
-  document.getElementById('result-total').textContent = total;
-  document.getElementById('res-correct').textContent = correctCount;
-  document.getElementById('res-wrong').textContent = wrongCount;
-  document.getElementById('res-bonus').textContent = '+' + bonus;
-
-  const list = document.getElementById('wrong-items-list');
-  const wrap = document.getElementById('wrong-review');
-  list.innerHTML = '';
-  if (wrongAnswers.length === 0) {
-    wrap.style.display = 'none';
-  } else {
-    wrap.style.display = 'block';
-    wrongAnswers.forEach((w, i) => {
-      const item = document.createElement('div');
-      item.className = 'wrong-item';
-      item.style.animationDelay = (i * 0.08) + 's';
-      item.innerHTML = `
-        <div class="wrong-q-text">Q. ${escHtml(w.q)}</div>
-        <div class="wrong-answer-row">
-          <span class="your-ans">❌ あなたの答え：${escHtml(w.your)}</span>
-          <span class="correct-ans">✅ 正解：${escHtml(w.correct)}</span>
-        </div>
-      `;
-      list.appendChild(item);
-    });
-  }
-
-  showScreen('screen-result');
-  // 花丸スタンプ送信
-  setTimeout(function() { if (typeof _igoSendStamp === 'function') _igoSendStamp(); }, 400);
-}
-
-// ============================================================
-//  RANKING
-// ============================================================
-function saveRanking(genre, player, total, correct, wrong) {
-  const key = 'igo_ranking_' + genre;
-  let arr = JSON.parse(localStorage.getItem(key) || '[]');
-  arr.push({ player, total, correct, wrong, date: new Date().toLocaleDateString('ja-JP') });
-  arr.sort((a, b) => b.total - a.total);
-  arr = arr.slice(0, 20);
-  localStorage.setItem(key, JSON.stringify(arr));
-}
-
-function buildRankingTabs() {
-  const tabs = document.getElementById('ranking-tabs');
-  tabs.innerHTML = '';
-  GENRES.forEach((g, i) => {
-    const btn = document.createElement('button');
-    btn.className = 'tab-btn' + (i === 0 ? ' active' : '');
-    btn.textContent = g.icon + ' ' + g.name;
-    btn.onclick = () => {
-      document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
-      btn.classList.add('active');
-      renderRankingList(g.id);
-    };
-    tabs.appendChild(btn);
-  });
-  renderRankingList(GENRES[0].id);
-}
-
-function renderRankingList(genreId) {
-  const key = 'igo_ranking_' + genreId;
-  const arr = JSON.parse(localStorage.getItem(key) || '[]');
-  const list = document.getElementById('ranking-list');
-  list.innerHTML = '';
-  if (arr.length === 0) {
-    list.innerHTML = '<div class="ranking-empty">まだ記録がありません</div>';
-    return;
-  }
-  arr.forEach((r, i) => {
-    const cls = i === 0 ? 'gold' : i === 1 ? 'silver' : i === 2 ? 'bronze' : 'other';
-    const medal = i === 0 ? '🥇' : i === 1 ? '🥈' : i === 2 ? '🥉' : (i + 1);
-    const item = document.createElement('div');
-    item.className = 'rank-item';
-    item.style.animationDelay = (i * 0.05) + 's';
-    item.innerHTML = `
-      <div class="rank-num ${cls}">${medal}</div>
-      <div class="rank-info">
-        <div class="rank-name">${escHtml(r.player)}</div>
-        <div class="rank-genre">正解 ${r.correct}問 / ${r.date}</div>
+    <div class="top-rules">
+      <h3>⚡ ゲームルール</h3>
+      <div class="rules-grid">
+        <div class="rule-item"><span class="rule-icon">⏱</span><span>制限時間60秒＋残り時間ボーナス</span></div>
+        <div class="rule-item"><span class="rule-icon">✅</span><span>正解：+10点＋時間+5秒</span></div>
+        <div class="rule-item"><span class="rule-icon">❌</span><span>不正解：減点なし・時間-5秒</span></div>
+        <div class="rule-item"><span class="rule-icon">🃏</span><span>4択で回答・途中押しOK</span></div>
+        <div class="rule-item"><span class="rule-icon">🃏</span><span>各ジャンル30問ランダム出題</span></div>
+        <div class="rule-item"><span class="rule-icon">🏆</span><span>ローカルランキング記録</span></div>
       </div>
-      <div class="rank-score">${r.total}<span> pt</span></div>
-    `;
-    list.appendChild(item);
-  });
+    </div>
+
+    <div class="genre-section">
+      <h2>🎲 ジャンル選択 — クリックで即スタート！</h2>
+      <div class="genre-grid" id="genre-grid"></div>
+    </div>
+  </div>
+</div>
+
+<!-- ==================== CONFIRM SCREEN ==================== -->
+<div id="screen-confirm" class="screen">
+  <div class="confirm-card">
+    <div class="confirm-genre-icon" id="conf-icon">🎲</div>
+    <div class="confirm-genre-name" id="conf-name">ランダム出題</div>
+    <div class="confirm-detail" id="conf-detail">全ジャンルからランダムに30問出題します</div>
+
+    <div class="confirm-rules">
+      <div class="confirm-rule">⏱ <span>制限時間 <b>60秒</b></span></div>
+      <div class="confirm-rule">🃏 <span>出題数 <b>30問</b>（ランダム）</span></div>
+      <div class="confirm-rule">🃏 <span>4択で回答</span></div>
+      <div class="confirm-rule">🏆 <span>残り時間がボーナス点に加算</span></div>
+    </div>
+
+    <button class="btn btn-primary" id="btn-start-game">🚀 ゲームスタート！</button>
+    <button class="btn btn-secondary" id="btn-back-top">← ジャンル選択に戻る</button>
+  </div>
+</div>
+
+<!-- ==================== GAME SCREEN ==================== -->
+<div id="screen-game" class="screen">
+  <div class="app-content">
+    <div class="game-header">
+      <div class="game-progress">第 <span id="q-num">1</span> 問 / <span id="q-total">30</span></div>
+      <div class="game-score">⭐ <span id="score-disp">0</span></div>
+    </div>
+
+    <div class="timer-bar-wrap">
+      <div class="timer-display">
+        <span class="timer-label">⏱ 残り時間</span>
+        <span class="timer-value" id="timer-value">60</span>
+      </div>
+      <div class="timer-bar">
+        <div class="timer-fill" id="timer-fill" style="width:100%"></div>
+      </div>
+    </div>
+
+    <div class="question-area">
+      <div class="question-num" id="q-genre-label">理科・科学</div>
+      <div class="question-text" id="question-text">
+        <span class="cursor-blink"></span>
+      </div>
+    </div>
+
+    <div class="answer-section">
+      <div class="speech-no-support" id="speech-no-support">
+        ⚠️ このブラウザは音声認識に対応していません。テキスト入力でお答えください。
+      </div>
+
+      <div class="speech-box" id="speech-box">
+        <div class="speech-listening">
+          <div class="speech-wave">
+            <span></span><span></span><span></span><span></span><span></span>
+          </div>
+          <span class="speech-label" id="speech-label">🎙 聞いています...</span>
+        </div>
+        <div class="speech-result" id="speech-result">　</div>
+        <div class="speech-confirm" id="speech-confirm">
+          <button class="btn-ng" id="btn-speech-ng">❌ 再回答</button>
+          <button class="btn-ok" id="btn-speech-ok">✅ これで確定</button>
+        </div>
+      </div>
+
+      <div class="manual-input-area" id="manual-input-area">
+        <input type="text" class="manual-input" id="manual-input" placeholder="ここに回答を入力してEnter">
+        <div class="hint-text">Enterキーまたは「確定」ボタンで回答</div>
+        <button class="btn btn-primary" id="btn-manual-submit" style="margin-top:8px">確定</button>
+      </div>
+
+      <!-- choices-area: 4択選択肢エリア（app.jsが参照） -->
+      <div id="choices-area" style="display:none;margin-top:12px;"></div>
+
+      <!-- 問題報告ボタン（app.jsが参照） -->
+      <div style="margin-top:8px;text-align:right;">
+        <button id="btn-report-q" style="display:none;font-size:11px;background:none;border:1px solid rgba(255,255,255,0.2);color:rgba(255,255,255,0.4);padding:3px 8px;border-radius:3px;cursor:pointer;">問題を報告</button>
+        <button id="btn-report-a" style="display:none;font-size:11px;background:none;border:1px solid rgba(255,255,255,0.2);color:rgba(255,255,255,0.4);padding:3px 8px;border-radius:3px;cursor:pointer;">解答を報告</button>
+      </div>
+
+      <button class="btn btn-answer" id="btn-answer">⚡ 回答する！</button>
+    </div>
+  </div>
+</div>
+
+<!-- ==================== RESULT OVERLAY ==================== -->
+<div class="result-overlay" id="result-overlay">
+  <div class="result-box" id="result-box">
+    <div class="result-emoji" id="result-emoji">✅</div>
+    <div class="result-label" id="result-label">正解！</div>
+    <div class="result-answer-show">
+      <div class="result-answer-label">▼ 問題と正解</div>
+      <div class="result-answer-q" id="result-q-text"></div>
+      <div class="result-answer-a" id="result-a-text"></div>
+    </div>
+    <div class="result-feedback" id="result-feedback"></div>
+    <button class="btn btn-primary" id="btn-next">次の問題へ →</button>
+  </div>
+</div>
+
+<!-- ==================== FINAL SCREEN ==================== -->
+<div id="screen-final" class="screen">
+  <div class="app-content" style="width:100%; display:flex; flex-direction:column; align-items:center;">
+    <div class="final-header">
+      <div class="final-trophy" id="final-trophy">🏆</div>
+      <div class="final-title">ゲーム終了！</div>
+    </div>
+
+    <div class="final-score-card">
+      <div class="final-score-num" id="final-score">0</div>
+      <div class="final-score-label">最終スコア（ランキングに保存されました）</div>
+      <div class="final-stats">
+        <div class="stat-box">
+          <div class="stat-val green" id="final-correct">0</div>
+          <div class="stat-lbl">✅ 正解</div>
+        </div>
+        <div class="stat-box">
+          <div class="stat-val red" id="final-wrong">0</div>
+          <div class="stat-lbl">❌ 不正解</div>
+        </div>
+        <div class="stat-box">
+          <div class="stat-val blue" id="final-bonus">0</div>
+          <div class="stat-lbl">⏱ 時間ボーナス</div>
+        </div>
+      </div>
+      <button class="btn btn-primary" id="btn-retry">🔄 もう一度このジャンル</button>
+      <button class="btn btn-secondary" style="margin-top:10px" id="btn-go-top">🏠 ジャンル選択に戻る</button>
+    </div>
+
+    <div class="wrong-list-section" id="wrong-list-section">
+      <div class="wrong-list-title">📖 間違えた問題の復習</div>
+      <div id="wrong-list"></div>
+    </div>
+  </div>
+</div>
+
+<!-- ==================== RANKING SCREEN ==================== -->
+<div id="screen-ranking" class="screen">
+  <div class="app-content">
+    <div class="ranking-header">
+      <div style="font-size:48px">🏆</div>
+      <div class="ranking-title">スコアランキング</div>
+      <div style="color:var(--text2);font-size:13px;margin-top:4px">ローカル保存（上位20件）</div>
+    </div>
+    <div class="ranking-list" id="ranking-list"></div>
+    <div style="padding:0 20px;margin-top:16px">
+      <button class="btn btn-secondary" id="btn-clear-ranking" style="padding:10px">🗑 ランキングをリセット</button>
+    </div>
+  </div>
+</div>
+
+<!-- ==================== BOTTOM NAV ==================== -->
+<div class="bottom-nav">
+  <button class="nav-btn active" id="nav-top" onclick="App.nav('top')">
+    <span class="nav-icon">🏠</span>
+    <span>ホーム</span>
+  </button>
+  <button class="nav-btn" id="nav-ranking" onclick="App.nav('ranking')">
+    <span class="nav-icon">🏆</span>
+    <span>ランキング</span>
+  </button>
+</div>
+
+<div class="feedback-toast" id="feedback-toast"></div>
+
+<script src="questions.js"></script>
+<script src="questions-extra.js"></script>
+<script src="app.js"></script>
+
+<!-- ポータルに戻るボタン（固定） -->
+<style>
+.portal-fixed-btn{
+  position:fixed;bottom:20px;left:20px;z-index:10000;
+  display:inline-flex;align-items:center;gap:8px;
+  padding:10px 18px;
+  background:rgba(15,23,42,0.92);
+  color:#a5f3fc;
+  font-family:'Share Tech Mono',monospace,sans-serif;
+  font-size:12px;letter-spacing:0.08em;
+  border-radius:4px;
+  border:1px solid rgba(6,182,212,0.35);
+  text-decoration:none;
+  backdrop-filter:blur(6px);
+  box-shadow:0 4px 16px rgba(0,0,0,0.5);
+  transition:all 0.15s;
+  white-space:nowrap;
+  pointer-events:auto;
 }
-
-function showRanking() {
-  buildRankingTabs();
-  showScreen('screen-ranking');
+.portal-fixed-btn:hover{
+  background:rgba(15,23,42,0.98);
+  border-color:rgba(6,182,212,0.7);
+  transform:translateY(-1px);
+  color:#cffafe;
 }
-
-function escHtml(s) {
-  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+@media(max-width:480px){
+  .portal-fixed-btn{bottom:14px;left:14px;padding:8px 14px;font-size:11px;}
 }
+</style>
 
-// ============================================================
-//  NAVIGATION
-// ============================================================
-function showScreen(id) {
-  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
-  document.getElementById(id).classList.add('active');
-  window.scrollTo(0, 0);
-}
-function backToTop() { clearInterval(timer); showScreen('screen-top'); }
-function retryGame() { showScreen('screen-name'); }
+<a class="portal-fixed-btn" href="https://pecpec37-gift.github.io/portal/">← Tommy-Go</a>
 
-// Enter key shortcuts
-document.addEventListener('keydown', e => {
-  if (e.key === 'Enter') {
-    if (document.getElementById('screen-name').classList.contains('active')) startGame();
-    const nb = document.getElementById('btn-next');
-    if (nb && nb.classList.contains('show')) nextQuestion();
-  }
-});
-
-init();
-</script>
-  <!-- ⭐ スタンプ送信（とみやんのゲームランド） -->
-<script>
-(function() {
-  var GAME_ID = 'igo-quiz';
-  var _stampSent = false;
-
-  window._igoSendStamp = function() {
-    if (!window.TomyStamp) return;
-    if (_stampSent) return;
-
-    var player = (typeof currentPlayer === 'string' && currentPlayer && currentPlayer !== 'ゲスト')
-      ? currentPlayer : TomyStamp.getPlayer();
-    if (player) TomyStamp.setPlayer(player);
-    if (!player) return;
-
-    var correctNum = (typeof correctCount === 'number') ? correctCount : 0;
-
-    var genreName = 'default';
-    if (typeof currentGenre === 'string' && currentGenre && typeof GENRES !== 'undefined') {
-      var g = GENRES.find(function(g) { return g.id === currentGenre; });
-      if (g) genreName = g.name;
-    }
-
-    console.log('[stamp] player=' + player + ' correct=' + correctNum + ' genre=' + genreName);
-
-    if (correctNum >= 9) {
-      _stampSent = true;
-      TomyStamp.send(GAME_ID, genreName, correctNum).then(function(r) {
-        if (r && r.ok) {
-          console.log('[🌸 stamp] 獲得!');
-          var toast = document.createElement('div');
-          toast.textContent = '🌸 花丸スタンプ獲得！ランキングに反映されます';
-          toast.style.cssText = 'position:fixed;bottom:80px;left:50%;transform:translateX(-50%);background:#1a1a1a;color:#f48fb1;padding:10px 20px;border-radius:4px;font-size:13px;z-index:9999;border:1px solid rgba(244,143,177,0.5);white-space:nowrap;';
-          document.body.appendChild(toast);
-          setTimeout(function() { if (document.body.contains(toast)) document.body.removeChild(toast); }, 3000);
-        }
-      });
-    }
-  };
-
-  // selectGenre をフック（新ゲーム開始でリセット）
-  document.addEventListener('DOMContentLoaded', function() {
-    var _origSelectGenre = window.selectGenre;
-    if (typeof _origSelectGenre === 'function') {
-      window.selectGenre = function(genreId) {
-        _stampSent = false;
-        _origSelectGenre.apply(this, arguments);
-        setTimeout(function() {
-          var inp = document.getElementById('player-name-input');
-          if (inp && window.TomyStamp) {
-            var saved = TomyStamp.getPlayer();
-            if (saved && !inp.value) inp.value = saved;
-          }
-        }, 80);
-      };
-    }
-  });
-})();
-</script>
 </body>
 </html>
